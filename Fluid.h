@@ -15,12 +15,12 @@
 #define HEIGHT 1000
 #define XDIM 60
 #define YDIM 200
-#define SPACING 8.0
+#define SPACING 10.0
 #define PARTICLE_SIZE 0.25
 #define SOLID 2
 #define FLUID 0
 #define EMPTY 1
-#define PUSH_PENALTY 0.1
+#define PUSH_PENALTY 0.05
 #define BETTER_PROJECTION false
 #define BETTER_INTEGRATION true
 #define TIMESTEP 1.0/60.0

@@ -157,7 +157,7 @@ void Fluid::projectGS() {
     // Gauss-Seidel solver (without vectorization)
     prevXVelocities = xVelocities;
     prevYVelocities = yVelocities;
-    int numIterations = 10;
+    int numIterations = 100;
     float overRelaxation = 1.9;
     for (int i = 0; i < numIterations; i++) {
         // Note that we go from 1 to gridDimension - 2 to make sure there are always valid velocity components to pull from
@@ -178,7 +178,7 @@ void Fluid::projectGS() {
                     // Initialize divergence
                     float divergence = 0.0;
                     // Account for the particle density by subtracting the compression factor
-                    float stiffnessCoefficient = 0.05;
+                    float stiffnessCoefficient = 1;
                     if (initialParticleDensity > 0)    {
                         float compression = cellParticleDensity[cellCoordinate] - initialParticleDensity;
                         if (compression > 0) divergence -= stiffnessCoefficient * compression;
