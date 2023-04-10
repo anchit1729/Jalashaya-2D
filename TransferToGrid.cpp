@@ -103,4 +103,16 @@ void Fluid::transferVelocitiesToGrid() {
         if (yR[i] > 0.0) yVelocities[i] /= yR[i];
     }
     //std::cout << "Velocity transfer complete.\n";
+
+    // restore grid velocities for solid cells
+    for (int i = 0; i < gridLength; i++) {
+        for (int j = 0; j < gridHeight; j++) {
+                if (cellType[IX(i, j)] == SOLID || cellType[IX(i - 1, j)] == SOLID)   {
+                    xVelocities[IX(i, j)] = prevXVelocities[IX(i, j)];
+                }
+                if (cellType[IX(i, j)] == SOLID || cellType[IX(i, j - 1)] == SOLID)   {
+                    yVelocities[IX(i, j)] = prevYVelocities[IX(i, j)];
+                }
+        }
+    }
 }

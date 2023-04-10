@@ -188,13 +188,13 @@ void Fluid::projectGS() {
                     topMultiplicationFactor /= normalizationFactor;
                     bottomMultiplicationFactor /= normalizationFactor;
                     // Finally, compute divergence and modify velocities considering all multiplication factors
-                    divergence += (rightXVelocity - leftXVelocity + topYVelocity - bottomYVelocity);// / spacing;
+                    divergence += (rightXVelocity - leftXVelocity + topYVelocity - bottomYVelocity);
                     divergence *= overRelaxation;
                     // Account for the particle density by subtracting the compression factor
                     float stiffnessCoefficient = 1;
                     if (initialParticleDensity > 0)    {
                         float compression = cellParticleDensity[cellCoordinate] - initialParticleDensity;
-                        //if (compression > 0) divergence -= (stiffnessCoefficient * compression);// / spacing;
+                        if (compression > 0) divergence -= (stiffnessCoefficient * compression);// / spacing;
                     }
                     xVelocities[cellCoordinate] += divergence * leftMultiplicationFactor;
                     xVelocities[rightCellCoordinate] -= divergence * rightMultiplicationFactor;
