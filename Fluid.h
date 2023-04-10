@@ -20,7 +20,7 @@
 #define SOLID 2
 #define FLUID 0
 #define EMPTY 1
-#define PUSH_PENALTY 0.05
+#define PUSH_PENALTY 1
 #define BETTER_PROJECTION false
 #define BETTER_INTEGRATION true
 #define TIMESTEP 1.0/60.0

@@ -177,12 +177,6 @@ void Fluid::projectGS() {
                     float topYVelocity = yVelocities[topCellCoordinate];
                     // Initialize divergence
                     float divergence = 0.0;
-                    // Account for the particle density by subtracting the compression factor
-                    float stiffnessCoefficient = 1;
-                    if (initialParticleDensity > 0)    {
-                        float compression = cellParticleDensity[cellCoordinate] - initialParticleDensity;
-                        if (compression > 0) divergence -= stiffnessCoefficient * compression;
-                    }
                     // Compute multiplication factor (inspired by Ten Minute Physics' explanation to account for solid cells)
                     float leftMultiplicationFactor = cellType[leftCellCoordinate] == FLUID || cellType[leftCellCoordinate] == EMPTY ? 1.0 : 0.0;
                     float rightMultiplicationFactor = cellType[rightCellCoordinate] == FLUID || cellType[rightCellCoordinate] == EMPTY ? 1.0 : 0.0;
@@ -194,11 +188,18 @@ void Fluid::projectGS() {
                     topMultiplicationFactor /= normalizationFactor;
                     bottomMultiplicationFactor /= normalizationFactor;
                     // Finally, compute divergence and modify velocities considering all multiplication factors
-                    divergence += rightXVelocity - leftXVelocity + topYVelocity - bottomYVelocity;
-                    xVelocities[cellCoordinate] += divergence * leftMultiplicationFactor * overRelaxation;
-                    xVelocities[rightCellCoordinate] -= divergence * rightMultiplicationFactor * overRelaxation;
-                    yVelocities[cellCoordinate] += divergence * bottomMultiplicationFactor * overRelaxation;
-                    yVelocities[topCellCoordinate] -= divergence * topMultiplicationFactor * overRelaxation;
+                    divergence += (rightXVelocity - leftXVelocity + topYVelocity - bottomYVelocity) / spacing;
+                    divergence *= overRelaxation;
+                    // Account for the particle density by subtracting the compression factor
+                    float stiffnessCoefficient = 1;
+                    if (initialParticleDensity > 0)    {
+                        float compression = cellParticleDensity[cellCoordinate] - initialParticleDensity;
+                        if (compression > 0) divergence -= (stiffnessCoefficient * compression) / spacing;
+                    }
+                    xVelocities[cellCoordinate] += divergence * leftMultiplicationFactor;
+                    xVelocities[rightCellCoordinate] -= divergence * rightMultiplicationFactor;
+                    yVelocities[cellCoordinate] += divergence * bottomMultiplicationFactor;
+                    yVelocities[topCellCoordinate] -= divergence * topMultiplicationFactor;
                 }
             }
         }

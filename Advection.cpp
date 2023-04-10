@@ -181,7 +181,7 @@ void Fluid::extrapolateVelocities() {
     for (int i = 1; i < gridLength; i++)    {
         for (int j = 1; j < gridHeight; j++) {
             if (cellType[IX(i, j)] == SOLID) continue;
-            bool neighborXMarker = (xMarker[IX(i + 1, j)] == 0 || xMarker[IX(i - 1, j)] || xMarker[IX(i, j + 1)] || xMarker[IX(i, j - 1)]);
+            bool neighborXMarker = (xMarker[IX(i + 1, j)] == 0 || xMarker[IX(i - 1, j)] == 0 || xMarker[IX(i, j + 1)] == 0 || xMarker[IX(i, j - 1)] == 0);
             if (xMarker[IX(i, j)] != 0 && neighborXMarker)  {
                 xMarker[IX(i, j)] = 0;
                 wX.emplace_back(i, j);
@@ -245,7 +245,7 @@ void Fluid::extrapolateVelocities() {
     for (int i = 1; i < gridLength; i++)    {
         for (int j = 1; j < gridHeight; j++) {
             if (cellType[IX(i, j)] == SOLID) continue;
-            bool neighborYMarker = (yMarker[IX(i + 1, j)] == 0 || yMarker[IX(i - 1, j)] || yMarker[IX(i, j + 1)] || yMarker[IX(i, j - 1)]);
+            bool neighborYMarker = (yMarker[IX(i + 1, j)] == 0 || yMarker[IX(i - 1, j)] == 0 || yMarker[IX(i, j + 1)] == 0 || yMarker[IX(i, j - 1)] == 0);
             if (yMarker[IX(i, j)] != 0 && neighborYMarker)  {
                 yMarker[IX(i, j)] = 0;
                 wY.emplace_back(i, j);
