@@ -178,23 +178,23 @@ void Fluid::projectGS() {
                     // Initialize divergence
                     float divergence = 0.0;
                     // Compute multiplication factor (inspired by Ten Minute Physics' explanation to account for solid cells)
-                    float leftMultiplicationFactor = cellType[leftCellCoordinate] == FLUID || cellType[leftCellCoordinate] == EMPTY ? 1.0 : 0.0;
-                    float rightMultiplicationFactor = cellType[rightCellCoordinate] == FLUID || cellType[rightCellCoordinate] == EMPTY ? 1.0 : 0.0;
-                    float topMultiplicationFactor = cellType[topCellCoordinate] == FLUID || cellType[topCellCoordinate] == EMPTY ? 1.0 : 0.0;
-                    float bottomMultiplicationFactor = cellType[bottomCellCoordinate] == FLUID || cellType[bottomCellCoordinate] == EMPTY ? 1.0 : 0.0;
+                    float leftMultiplicationFactor = cellType[leftCellCoordinate] != SOLID ? 1.0 : 0.0;
+                    float rightMultiplicationFactor = cellType[rightCellCoordinate] != SOLID ? 1.0 : 0.0;
+                    float topMultiplicationFactor = cellType[topCellCoordinate] != SOLID ? 1.0 : 0.0;
+                    float bottomMultiplicationFactor = cellType[bottomCellCoordinate] != SOLID ? 1.0 : 0.0;
                     float normalizationFactor = leftMultiplicationFactor + rightMultiplicationFactor + topMultiplicationFactor + bottomMultiplicationFactor;
                     leftMultiplicationFactor /= normalizationFactor;
                     rightMultiplicationFactor /= normalizationFactor;
                     topMultiplicationFactor /= normalizationFactor;
                     bottomMultiplicationFactor /= normalizationFactor;
                     // Finally, compute divergence and modify velocities considering all multiplication factors
-                    divergence += (rightXVelocity - leftXVelocity + topYVelocity - bottomYVelocity) / spacing;
+                    divergence += (rightXVelocity - leftXVelocity + topYVelocity - bottomYVelocity);// / spacing;
                     divergence *= overRelaxation;
                     // Account for the particle density by subtracting the compression factor
                     float stiffnessCoefficient = 1;
                     if (initialParticleDensity > 0)    {
                         float compression = cellParticleDensity[cellCoordinate] - initialParticleDensity;
-                        if (compression > 0) divergence -= (stiffnessCoefficient * compression) / spacing;
+                        //if (compression > 0) divergence -= (stiffnessCoefficient * compression);// / spacing;
                     }
                     xVelocities[cellCoordinate] += divergence * leftMultiplicationFactor;
                     xVelocities[rightCellCoordinate] -= divergence * rightMultiplicationFactor;

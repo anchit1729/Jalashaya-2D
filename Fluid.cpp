@@ -49,8 +49,8 @@ Fluid::Fluid() {
     int index = 0;
     for (int i = 0; i < particleMassLength; i++)    {
         for (int j = 0; j < particleMassHeight; j++)    {
-            particleXPositions[index] = spacing + 2 * particleRadius * i + (j % 2 == 0 ? particleRadius : 0);
-            particleYPositions[index++] = spacing + 1.73 * particleRadius * j;
+            particleXPositions[index] = spacing + 2 * particleRadius * i; //+ (j % 2 == 0 ? particleRadius : 0);
+            particleYPositions[index++] = spacing + 2 * particleRadius * j;
         }
     }
     for (int i = 0; i < numParticles; i++) {
@@ -75,6 +75,10 @@ void Fluid::simulateFluid() {
     //std::cout << "Simulating fluid...\n";
     advect();
     detectBoundaryCollisions();
+    if (PENALTY) {
+        spatialHashing();
+        detectParticleCollisions();
+    }
     transferVelocitiesToGrid();
     extrapolateVelocities();
     if (BETTER_PROJECTION)  {
@@ -85,9 +89,5 @@ void Fluid::simulateFluid() {
     }
     extrapolateVelocities();
     transferVelocitiesFromGrid();
-    if (PENALTY) {
-        spatialHashing();
-        detectParticleCollisions();
-    }
     //std::cout << "Simulation step complete.\n";
 }

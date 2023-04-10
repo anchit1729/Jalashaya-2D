@@ -62,13 +62,13 @@ void Fluid::detectParticleCollisions() {
                             float x = (particleXPositions[i] - particleXPositions[particle]);
                             float y = (particleYPositions[i] - particleYPositions[particle]);
                             float distance = sqrt(pow(x, 2) + pow(y, 2));
-                            if (distance < 2.0 * particleRadius && distance != 0)    {
+                            if (distance < 2.0 * particleRadius)    {
                                 // apply penalties, push particles (spring-like penalties)
                                 float penaltyFactor = 0.5 * (2.0 * particleRadius - distance) / distance;
-                                particleXPositions[i] += PUSH_PENALTY * x * penaltyFactor;
-                                particleYPositions[i] += PUSH_PENALTY * y * penaltyFactor;
-                                particleXPositions[particle] -= PUSH_PENALTY * x * penaltyFactor;
-                                particleYPositions[particle] -= PUSH_PENALTY * y * penaltyFactor;
+                                particleXPositions[i] += PUSH_PENALTY * x; //* penaltyFactor;
+                                particleYPositions[i] += PUSH_PENALTY * y;// * penaltyFactor;
+                                particleXPositions[particle] -= PUSH_PENALTY * x;// * penaltyFactor;
+                                particleYPositions[particle] -= PUSH_PENALTY * y;// * penaltyFactor;
                             }
                         }
                     }

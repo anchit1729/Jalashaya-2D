@@ -20,7 +20,7 @@
 #define SOLID 2
 #define FLUID 0
 #define EMPTY 1
-#define PUSH_PENALTY 1
+#define PUSH_PENALTY 0.1
 #define BETTER_PROJECTION false
 #define BETTER_INTEGRATION true
 #define TIMESTEP 1.0/60.0
@@ -77,7 +77,7 @@ public:
     float spatialHashGridSpacing = 2 * particleRadius;
     //int particleMassLength = floor((0.4 * LENGTH) / (2.0 * particleRadius));
     int particleMassLength = XDIM;
-    //int particleMassHeight = floor((0.6 * HEIGHT) / (2.0 * particleRadius));
+    //int particleMassHeight = floor((1.0 * HEIGHT) / (2.0 * particleRadius));
     int particleMassHeight = YDIM;
     int numParticles = particleMassHeight * particleMassLength;
     // Store particle positions
