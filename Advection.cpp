@@ -37,10 +37,10 @@ void Fluid::advect() {
             // Proceed with transfer from the grid to particle
             int offset = gridHeight;
             // Determine whether contributing corners on grid are valid or not
-            float valid1 = cellType[corner1] != EMPTY || cellType[corner1 - offset] != EMPTY ? 1.0 : 0.0;
-            float valid2 = cellType[corner2] != EMPTY || cellType[corner2 - offset] != EMPTY ? 1.0 : 0.0;
-            float valid3 = cellType[corner3] != EMPTY || cellType[corner3 - offset] != EMPTY ? 1.0 : 0.0;
-            float valid4 = cellType[corner4] != EMPTY || cellType[corner4 - offset] != EMPTY ? 1.0 : 0.0;
+            float valid1 = cellType[corner1] != EMPTY || cellType[corner1 - offset] != EMPTY ? 1.0 : 1.0;
+            float valid2 = cellType[corner2] != EMPTY || cellType[corner2 - offset] != EMPTY ? 1.0 : 1.0;
+            float valid3 = cellType[corner3] != EMPTY || cellType[corner3 - offset] != EMPTY ? 1.0 : 1.0;
+            float valid4 = cellType[corner4] != EMPTY || cellType[corner4 - offset] != EMPTY ? 1.0 : 1.0;
             float d = w1 * valid1 + w2 * valid2 + w3 * valid3 + w4 * valid4;
             float velocity = particleXVelocities[i];
             if (d > 0.0)    {
@@ -70,10 +70,10 @@ void Fluid::advect() {
             // Proceed with transfer from the grid to particle
             offset = 1;
             // Determine whether contributing corners on grid are valid or not
-            valid1 = cellType[corner1] != EMPTY || cellType[corner1 - offset] != EMPTY ? 1.0 : 0.0;
-            valid2 = cellType[corner2] != EMPTY || cellType[corner2 - offset] != EMPTY ? 1.0 : 0.0;
-            valid3 = cellType[corner3] != EMPTY || cellType[corner3 - offset] != EMPTY ? 1.0 : 0.0;
-            valid4 = cellType[corner4] != EMPTY || cellType[corner4 - offset] != EMPTY ? 1.0 : 0.0;
+            valid1 = cellType[corner1] != EMPTY || cellType[corner1 - offset] != EMPTY ? 1.0 : 1.0;
+            valid2 = cellType[corner2] != EMPTY || cellType[corner2 - offset] != EMPTY ? 1.0 : 1.0;
+            valid3 = cellType[corner3] != EMPTY || cellType[corner3 - offset] != EMPTY ? 1.0 : 1.0;
+            valid4 = cellType[corner4] != EMPTY || cellType[corner4 - offset] != EMPTY ? 1.0 : 1.0;
             d = w1 * valid1 + w2 * valid2 + w3 * valid3 + w4 * valid4;
             velocity = particleYVelocities[i];
             if (d > 0.0)    {
@@ -108,10 +108,10 @@ void Fluid::advect() {
             // Proceed with transfer from the grid to particle
             offset = gridHeight;
             // Determine whether contributing corners on grid are valid or not
-            valid1 = cellType[corner1] != EMPTY || cellType[corner1 - offset] != EMPTY ? 1.0 : 0.0;
-            valid2 = cellType[corner2] != EMPTY || cellType[corner2 - offset] != EMPTY ? 1.0 : 0.0;
-            valid3 = cellType[corner3] != EMPTY || cellType[corner3 - offset] != EMPTY ? 1.0 : 0.0;
-            valid4 = cellType[corner4] != EMPTY || cellType[corner4 - offset] != EMPTY ? 1.0 : 0.0;
+            valid1 = cellType[corner1] != EMPTY || cellType[corner1 - offset] != EMPTY ? 1.0 : 1.0;
+            valid2 = cellType[corner2] != EMPTY || cellType[corner2 - offset] != EMPTY ? 1.0 : 1.0;
+            valid3 = cellType[corner3] != EMPTY || cellType[corner3 - offset] != EMPTY ? 1.0 : 1.0;
+            valid4 = cellType[corner4] != EMPTY || cellType[corner4 - offset] != EMPTY ? 1.0 : 1.0;
             d = w1 * valid1 + w2 * valid2 + w3 * valid3 + w4 * valid4;
             velocity = particleXVelocities[i];
             if (d > 0.0)    {
@@ -140,10 +140,10 @@ void Fluid::advect() {
             // Proceed with transfer from the grid to particle
             offset = 1;
             // Determine whether contributing corners on grid are valid or not
-            valid1 = cellType[corner1] != EMPTY || cellType[corner1 - offset] != EMPTY ? 1.0 : 0.0;
-            valid2 = cellType[corner2] != EMPTY || cellType[corner2 - offset] != EMPTY ? 1.0 : 0.0;
-            valid3 = cellType[corner3] != EMPTY || cellType[corner3 - offset] != EMPTY ? 1.0 : 0.0;
-            valid4 = cellType[corner4] != EMPTY || cellType[corner4 - offset] != EMPTY ? 1.0 : 0.0;
+            valid1 = cellType[corner1] != EMPTY || cellType[corner1 - offset] != EMPTY ? 1.0 : 1.0;
+            valid2 = cellType[corner2] != EMPTY || cellType[corner2 - offset] != EMPTY ? 1.0 : 1.0;
+            valid3 = cellType[corner3] != EMPTY || cellType[corner3 - offset] != EMPTY ? 1.0 : 1.0;
+            valid4 = cellType[corner4] != EMPTY || cellType[corner4 - offset] != EMPTY ? 1.0 : 1.0;
             d = w1 * valid1 + w2 * valid2 + w3 * valid3 + w4 * valid4;
             velocity = particleYVelocities[i];
             if (d > 0.0)    {
