@@ -5,125 +5,149 @@
 #define MAX_ITERS 200
 
 void Fluid::projectPCG() {
-    // Preconditioned Conjugate Gradient (Eigen implementation)
-    SparseMatrix<double> A(numCells, numCells);
-    VectorXd pressure(numCells);
-    VectorXd divergence(numCells);
-    prevXVelocities = xVelocities;
-    prevYVelocities = yVelocities;
+    // Preconditioned Conjugate Gradient (vectorized, using Eigen)
+    // Compute a mapping for fluid indices
+    std::vector<int> fluidIndices;
+    fluidIndices.resize(numCells, -1);
+    int numFluidCells = 0;
+    for (int i = 0; i < gridLength; i++)    {
+        for (int j = 0; j < gridHeight; j++)    {
+            if (cellType[IX(i, j)] == FLUID)    {
+                fluidIndices[IX(i, j)] = numFluidCells;
+                numFluidCells++;
+            }
+        }
+    }
+    // first, we need to prepare the sparse matrix A
+    A.resize(numFluidCells, numFluidCells);
+    pressure.resize(numFluidCells);
+    divergence.resize(numFluidCells);
     A.setZero();
-    divergence.setZero();
     pressure.setZero();
-    A.reserve(VectorXd::Constant(numCells, 5)); // at most 5 non-zero elements per row in 2D
-    // Step 1: Set up the divergence matrix
-    float scale = 1.0 / spacing;
-    for (int cellXCoordinate = 1; cellXCoordinate < gridLength-1; cellXCoordinate++)    {
-        for (int cellYCoordinate = 1; cellYCoordinate < gridHeight-1; cellYCoordinate++)    {
-            if (cellType[IX(cellXCoordinate, cellYCoordinate)] == FLUID)    {
-                divergence[IX(cellXCoordinate, cellYCoordinate)] = -scale * (xVelocities[IX(cellXCoordinate+1, cellYCoordinate)] - xVelocities[IX(cellXCoordinate, cellYCoordinate)] + yVelocities[IX(cellXCoordinate, cellYCoordinate+1)] - yVelocities[IX(cellXCoordinate, cellYCoordinate)]);
-            }
-        }
-    }
-    for (int cellXCoordinate = 1; cellXCoordinate < gridLength-1; cellXCoordinate++)  {
-        for (int cellYCoordinate = 1; cellYCoordinate < gridHeight-1; cellYCoordinate++)  {
-            if (cellType[cellXCoordinate * gridHeight + cellYCoordinate] == FLUID)  {
-                // compute the negative divergence for all fluid cells
-                int cellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate;
-                int rightCellCoordinate = (cellXCoordinate + 1) * gridHeight + cellYCoordinate;
-                int topCellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate + 1;
-                int leftCellCoordinate = (cellXCoordinate - 1) * gridHeight + cellYCoordinate;
-                int bottomCellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate - 1;
-                // When accounting for solids, we assume solid wall velocity = 0
-                if (cellType[leftCellCoordinate] == SOLID)    {
-                    divergence[cellCoordinate] -= scale * (xVelocities[cellCoordinate]);
+    divergence.setZero();
+    A.reserve(VectorXd::Constant(numCells, 5)); // reserve room for 5 non-zero elements per row
+    double scale = (TIMESTEP / SUBSTEPS) / (density * spacing * spacing);
+    for (int i = 0; i < gridLength; i++)    {
+        for (int j = 0; j < gridHeight; j++)    {
+            if (cellType[IX(i, j)] == FLUID)    {
+                // only populate entries for fluid cells
+                // check neighboring cells to populate
+                if (cellType[IX(i - 1, j)] == FLUID)    {
+                    // left neighbor
+                    A.coeffRef(fluidIndices[IX(i, j)], fluidIndices[IX(i - 1, j)]) = -scale;
+                    A.coeffRef(fluidIndices[IX(i, j)], fluidIndices[IX(i, j)]) += scale;
                 }
-                if (cellType[rightCellCoordinate] == SOLID) {
-                    divergence[cellCoordinate] += scale * (xVelocities[rightCellCoordinate]);
+                else if (cellType[IX(i - 1, j)] == EMPTY)   {
+                    A.coeffRef(fluidIndices[IX(i, j)], fluidIndices[IX(i, j)]) += scale;
                 }
-                if (cellType[bottomCellCoordinate] == SOLID)    {
-                    divergence[cellCoordinate] -= scale * (yVelocities[cellCoordinate]);
+                if (cellType[IX(i + 1, j)] == FLUID)    {
+                    // right neighbor
+                    A.coeffRef(fluidIndices[IX(i, j)], fluidIndices[IX(i + 1, j)]) = -scale;
+                    A.coeffRef(fluidIndices[IX(i, j)], fluidIndices[IX(i, j)]) += scale;
                 }
-                if (cellType[topCellCoordinate] == SOLID)   {
-                    divergence[cellCoordinate] += scale * (yVelocities[topCellCoordinate]);
+                else if (cellType[IX(i + 1, j)] == EMPTY)   {
+                    A.coeffRef(fluidIndices[IX(i, j)], fluidIndices[IX(i, j)]) += scale;
                 }
-            }
-        }
-    }
-    // Step 2: Set up the A matrix entries
-    // NOTE: We exploit symmetry, thus using only positive direction variables
-    float dt = TIMESTEP / SUBSTEPS;
-    scale = dt / (density * spacing * spacing);
-    for (int cellXCoordinate = 1; cellXCoordinate < gridLength-1; cellXCoordinate++)  {
-        for (int cellYCoordinate = 1; cellYCoordinate < gridHeight-1; cellYCoordinate++)  {
-            if (cellType[cellXCoordinate * gridHeight + cellYCoordinate] == FLUID)  {
-                int leftCellCoordinate = (cellXCoordinate - 1) * gridHeight + cellYCoordinate;
-                int rightCellCoordinate = (cellXCoordinate + 1) * gridHeight + cellYCoordinate;
-                int bottomCellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate - 1;
-                int topCellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate + 1;
-                int cellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate;
-                // handle negative x neighbor
-                if (cellType[leftCellCoordinate] == FLUID)  {
-                    A.coeffRef(cellCoordinate, cellCoordinate) += scale;
+                if (cellType[IX(i, j - 1)] == FLUID)    {
+                    // bottom neighbor
+                    A.coeffRef(fluidIndices[IX(i, j)], fluidIndices[IX(i, j - 1)]) = -scale;
+                    A.coeffRef(fluidIndices[IX(i, j)], fluidIndices[IX(i, j)]) += scale;
                 }
-                // handle positive x neighbor
-                if (cellType[rightCellCoordinate] == FLUID) {
-                    A.coeffRef(cellCoordinate, cellCoordinate) += scale;
-                    A.coeffRef(cellCoordinate, rightCellCoordinate) = -scale;
-                    A.coeffRef(rightCellCoordinate, cellCoordinate) = -scale;
+                else if (cellType[IX(i, j - 1)] == EMPTY)   {
+                    A.coeffRef(fluidIndices[IX(i, j)], fluidIndices[IX(i, j)]) += scale;
                 }
-                else if (cellType[rightCellCoordinate] == EMPTY)    {
-                    A.coeffRef(cellCoordinate, cellCoordinate) += scale;
+                if (cellType[IX(i, j + 1)] == FLUID)    {
+                    // top neighbor
+                    A.coeffRef(fluidIndices[IX(i, j)], fluidIndices[IX(i, j + 1)]) = -scale;
+                    A.coeffRef(fluidIndices[IX(i, j)], fluidIndices[IX(i, j)]) += scale;
                 }
-                // handle negative y neighbor
-                if (cellType[bottomCellCoordinate] == FLUID)    {
-                    A.coeffRef(cellCoordinate, cellCoordinate) += scale;
-                }
-                // handle positive y neighbor
-                if (cellType[topCellCoordinate] == FLUID)   {
-                    A.coeffRef(cellCoordinate, cellCoordinate) += scale;
-                    A.coeffRef(cellCoordinate, topCellCoordinate) = -scale;
-                    A.coeffRef(topCellCoordinate, cellCoordinate) = -scale;
-                }
-                else if (cellType[topCellCoordinate] == EMPTY)  {
-                    A.coeffRef(cellCoordinate, cellCoordinate) += scale;
+                else if (cellType[IX(i, j + 1)] == EMPTY)   {
+                    A.coeffRef(fluidIndices[IX(i, j)], fluidIndices[IX(i, j)]) += scale;
                 }
             }
         }
     }
-    // Step 3: Run the PCG algorithm with Eigen
-    ConjugateGradient<SparseMatrix<double>, Eigen::UpLoType::Lower|Eigen::UpLoType::Upper> cg;
-    cg.setMaxIterations(250);
+
+    // next, compute divergence for all fluid cells
+    for (int i = 1; i < gridLength - 1; i++)    {
+        for (int j = 1; j < gridHeight - 1; j++)    {
+            if (cellType[IX(i, j)] == FLUID)    {
+                // only compute for fluid cells
+                double horizontal = (xVelocities[IX(i + 1, j)] - xVelocities[IX(i, j)]);
+                double vertical = (yVelocities[IX(i, j + 1)] - yVelocities[IX(i, j)]);
+                divergence.coeffRef(fluidIndices[IX(i, j)]) = -1 * (horizontal + vertical) / spacing;
+            }
+        }
+    }
+    // modify it to account for solid-fluid boundaries
+    for (int i = 1; i < gridLength - 1; i++)    {
+        for (int j = 1; j < gridHeight - 1; j++)    {
+            if (cellType[IX(i, j)] == FLUID)    {
+                // only for fluid cells
+                if (cellType[IX(i - 1, j)] == SOLID)    {
+                    divergence.coeffRef(fluidIndices[IX(i, j)]) -= (1 / spacing) * (xVelocities[IX(i, j)] - containerWallXVelocity);
+                }
+                if (cellType[IX(i + 1, j)] == SOLID)    {
+                    divergence.coeffRef(fluidIndices[IX(i, j)]) += (1 / spacing) * (xVelocities[IX(i, j)] - containerWallXVelocity);
+                }
+                if (cellType[IX(i, j - 1)] == SOLID)    {
+                    divergence.coeffRef(fluidIndices[IX(i, j)]) -= (1 / spacing) * (yVelocities[IX(i, j)] - containerWallYVelocity);
+                }
+                if (cellType[IX(i, j + 1)] == SOLID)    {
+                    divergence.coeffRef(fluidIndices[IX(i, j)]) += (1 / spacing) * (yVelocities[IX(i, j)] - containerWallYVelocity);
+                }
+            }
+        }
+    }
+    // system prepared, now precondition and solve!
+    ConjugateGradient<SparseMatrix<double>, Eigen::Lower|Eigen::Upper> cg;
+    cg.setMaxIterations(MAX_ITERS);
     cg.setTolerance(1e-6);
     cg.compute(A);
     pressure = cg.solve(divergence);
-    std::cout << "Iteration count: " << cg.iterations() << std::endl;
-    std::cout << "Estimated error: " << cg.error() << std::endl;
-    // Step 4: Use pressure estimates to compute velocity updates
-    scale = dt / (density * spacing);
-    for (int cellXCoordinate = 1; cellXCoordinate < gridLength-1; cellXCoordinate++)  {
-        for (int cellYCoordinate = 1; cellYCoordinate < gridHeight-1; cellYCoordinate++)  {
-            int leftCellCoordinate = (cellXCoordinate - 1) * gridHeight + cellYCoordinate;
-            int bottomCellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate - 1;
-            int cellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate;
-            if (cellType[leftCellCoordinate] == FLUID || cellType[cellCoordinate] == FLUID) {
-                if (cellType[leftCellCoordinate] == SOLID || cellType[cellCoordinate] == SOLID) {
-                    xVelocities[cellCoordinate] = 0;
+    std::cout << "Iterations: " << cg.iterations() << "\n";
+    std::cout << "Error: " << cg.error() << "\n";
+    // update the velocity field based on the solved pressure values
+    scale = (TIMESTEP / SUBSTEPS) / (density * spacing);
+    for (int i = 1; i < gridLength - 1; i++)    {
+        for (int j = 1; j < gridHeight - 1; j++)    {
+            // first, the x component
+            if (cellType[IX(i - 1, j)] == FLUID || cellType[IX(i, j)] == FLUID) {
+                if (cellType[IX(i - 1, j)] == SOLID || cellType[IX(i, j)] == SOLID) {
+                    xVelocities[IX(i, j)] = 0; xMarker[IX(i, j)] = 0; // solid velocities
                 } else  {
-                    xVelocities[cellCoordinate] -= scale * (pressure[cellCoordinate] - pressure[leftCellCoordinate]);
+                    float pressureDifference = 0;
+                    int x = fluidIndices[IX(i, j)];
+                    int y = fluidIndices[IX(i - 1, j)];
+                    if (x != -1 && y != -1) pressureDifference = (x - y);
+                    else if (x == -1 && y != -1) pressureDifference = -y;
+                    else if (x != -1 && y == -1) pressureDifference = x;
+                    else pressureDifference = 0;
+                    xVelocities[IX(i, j)] -= scale * pressureDifference;
+                    xMarker[IX(i, j)] = 0;
                 }
             } else  {
-                // mark unknown
-                xMarker[cellCoordinate] = INT_MAX;
+                xVelocities[IX(i, j)] = 0;
+                xMarker[IX(i, j)] = INT_MAX;
             }
-            if (cellType[bottomCellCoordinate] == FLUID || cellType[cellCoordinate] == FLUID)   {
-                if (cellType[bottomCellCoordinate] == SOLID || cellType[cellCoordinate] == SOLID)   {
-                    yVelocities[cellCoordinate] = 0;
+            // next, the y component
+            if (cellType[IX(i, j - 1)] == FLUID || cellType[IX(i, j)] == FLUID) {
+                if (cellType[IX(i, j - 1)] == SOLID || cellType[IX(i, j)] == SOLID) {
+                    yVelocities[IX(i, j)] = 0; yMarker[IX(i, j)] = 0; // solid velocities
                 } else  {
-                    yVelocities[cellCoordinate] -= scale * (pressure[cellCoordinate] - pressure(bottomCellCoordinate));
+                    float pressureDifference = 0;
+                    int x = fluidIndices[IX(i, j)];
+                    int y = fluidIndices[IX(i, j - 1)];
+                    if (x != -1 && y != -1) pressureDifference = (x - y);
+                    else if (x == -1 && y != -1) pressureDifference = -y;
+                    else if (x != -1 && y == -1) pressureDifference = x;
+                    else pressureDifference = 0;
+                    yVelocities[IX(i, j)] -= scale * pressureDifference;
+                    yMarker[IX(i, j)] = 0;
                 }
             } else  {
-                // mark unknown
-                yMarker[cellCoordinate] = INT_MAX;
+                yVelocities[IX(i, j)] = 0;
+                yMarker[IX(i, j)] = INT_MAX;
             }
         }
     }
