@@ -29,13 +29,7 @@ Fluid::Fluid() {
     spatialHashParticles.resize(numParticles);
 
     // For PCG Projection
-    A = SparseMatrix<double>(numCells, numCells);
-    pressure = VectorXd(numCells);
     density = 1000.0;
-    divergence = VectorXd(numCells);
-    A.setZero();
-    pressure.setZero();
-    divergence.setZero();
 
     // Part 2: Initialize particle stuff
     // Initialize the particle positions

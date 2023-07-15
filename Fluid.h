@@ -14,18 +14,18 @@
 #define LENGTH 1000
 #define HEIGHT 1000
 #define XDIM 60
-#define YDIM 200
+#define YDIM 100
 #define SPACING 10.0
 #define PARTICLE_SIZE 0.25
 #define SOLID 2
 #define FLUID 0
 #define EMPTY 1
 #define PUSH_PENALTY 0.1
-#define BETTER_PROJECTION false
+#define BETTER_PROJECTION true
 #define BETTER_INTEGRATION true
 #define TIMESTEP 1.0/60.0
-#define SUBSTEPS 2
-#define PENALTY true
+#define SUBSTEPS 4
+#define PENALTY false
 #define PIC 0.1
 
 using Eigen::MatrixXd;
@@ -57,11 +57,8 @@ public:
     // Each grid cell should also be marked as being solid, fluid or empty
     std::vector<int> cellType;
 
-    // For Conjugate Gradient implementation in Eigen
-    SparseMatrix<double> A; // coefficient matrix
-    VectorXd pressure; // pressure vector
+    // For Conjugate Gradient implementation
     float density = 1000;
-    VectorXd divergence; // divergence vector
     // To make sure drift doesn't occur (i.e. volume loss), we track particle density in each cell
     // This density must remain within a required range at all times, displacing any excess particles
     std::vector<float> cellParticleDensity;
