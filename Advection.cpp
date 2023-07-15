@@ -4,7 +4,7 @@
 #include "Fluid.h"
 
 void Fluid::advect() {
-    float dt = TIMESTEP*2;
+    float dt = TIMESTEP/SUBSTEPS;
     for (int i = 0; i < numParticles; i++)  {
         // Only velocity in the Y direction is integrated - due to gravity
         particleYVelocities[i] += dt * 9.81f;
@@ -15,8 +15,8 @@ void Fluid::advect() {
 
 void Fluid::detectBoundaryCollisions() {
     // First, set a minimum and maximum limit for particles to be located at
-    float minX = particleRadius;
-    float minY = particleRadius;
+    float minX = spacing + particleRadius;
+    float minY = spacing + particleRadius;
     float maxX = spacing * (gridLength - 1) - particleRadius;
     float maxY = spacing * (gridHeight - 1) - particleRadius;
     // Iterate over all particles, see whether they are colliding with any boundaries

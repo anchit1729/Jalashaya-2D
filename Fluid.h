@@ -20,16 +20,16 @@
 // Defining the grid cell spacing
 #define SPACING 10.0
 // Defining the multiplication factor for particle size in terms of grid cell spacing (each particle is PARTICLE_SIZE * SPACING in radius)
-#define PARTICLE_SIZE 0.22
+#define PARTICLE_SIZE 0.25
 #define FLUID 0
 #define EMPTY 1
 #define SOLID 2
 // Defining whether to use PCG (better but slower but also parallel) or GS (standard)
 #define BETTER_PROJECTION true
 // Defining the time-step size
-#define TIMESTEP 1.0/60.0
+#define TIMESTEP 1.0/30.0
 // Defining the number of sub-steps (to satisfy CFL condition)
-#define SUBSTEPS 4
+#define SUBSTEPS 2
 // Defining the PIC/FLIP blending ratio
 #define PIC 0.1
 
@@ -81,11 +81,6 @@ public:
     std::vector<float> particleYVelocities;
     float containerWallXVelocity;
     float containerWallYVelocity;
-
-    // For surface reconstruction, we need to store grid point distances
-    std::vector<float> pointDistance;
-    // we also need to store indices of the closest point
-    std::vector<int> closestPointIndices;
 
     // Finally, we come to functions
     Fluid();

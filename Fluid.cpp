@@ -44,9 +44,6 @@ Fluid::Fluid() {
 
     containerWallXVelocity = 0;
     containerWallYVelocity = 0;
-
-    pointDistance.resize(numCells, INT_MAX);
-    closestPointIndices.resize(numCells, -1);
 }
 
 int Fluid::IX(int x, int y) {
@@ -65,5 +62,4 @@ void Fluid::simulateFluid() {
     transferVelocitiesFromGrid();
     advect();
     detectBoundaryCollisions();
-    //std::cout << "Simulation step complete.\n";
 }

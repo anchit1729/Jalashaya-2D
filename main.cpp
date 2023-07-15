@@ -14,7 +14,7 @@ int main() {
         circle.setRadius(fluid.particleRadius);
         circle.setFillColor(sf::Color::Blue);
     }
-    std:: cout << fluid.numParticles;
+    std:: cout << fluid.numParticles << " particles.\n";
     for (int i = 0; i < fluid.numParticles; i++)    {
         circles[i].setPosition(fluid.particleXPositions[i], fluid.particleYPositions[i]);
     }
