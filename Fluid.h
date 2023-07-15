@@ -12,24 +12,24 @@
 #ifndef FLUIDSIM_FLUID_H
 #define FLUIDSIM_FLUID_H
 // Defining grid dimensions
-#define LENGTH 1000
-#define HEIGHT 1000
+#define LENGTH 200
+#define HEIGHT 200
 // Defining the number of fluid particles along each dimension
 #define XDIM 60
-#define YDIM 100
+#define YDIM 60
 // Defining the grid cell spacing
-#define SPACING 10.0
+#define SPACING 2.0
 // Defining the multiplication factor for particle size in terms of grid cell spacing (each particle is PARTICLE_SIZE * SPACING in radius)
 #define PARTICLE_SIZE 0.25
 #define FLUID 0
 #define EMPTY 1
 #define SOLID 2
 // Defining whether to use PCG (better but slower but also parallel) or GS (standard)
-#define BETTER_PROJECTION true
+#define BETTER_PROJECTION false
 // Defining the time-step size
-#define TIMESTEP 1.0/30.0
+#define TIMESTEP 1.0/60.0
 // Defining the number of sub-steps (to satisfy CFL condition)
-#define SUBSTEPS 2
+#define SUBSTEPS 4
 // Defining the PIC/FLIP blending ratio
 #define PIC 0.1
 

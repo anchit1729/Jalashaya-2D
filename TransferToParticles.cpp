@@ -78,6 +78,7 @@ void Fluid::transferVelocitiesFromGrid() {
             float weightedVelocityChanges = (valid1 * w1 * (yVelocities[corner1] - prevYVelocities[corner1]) + valid2 * w2 * (yVelocities[corner2] - prevYVelocities[corner2]) + valid3 * w3 * (yVelocities[corner3] - prevYVelocities[corner3]) + valid4 * w4 * (yVelocities[corner4] - prevYVelocities[corner4])) / d;
             float flipVelocity = velocity + weightedVelocityChanges;
             particleYVelocities[i] = PIC * picVelocity + (1 - PIC) * flipVelocity;
+            if (x < 2 * spacing && particleYVelocities[i] < 0.1f) particleYVelocities[i] += 0.1f;
         }
     }
 }

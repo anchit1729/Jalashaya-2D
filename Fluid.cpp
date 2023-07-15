@@ -37,8 +37,8 @@ Fluid::Fluid() {
     int index = 0;
     for (int i = 0; i < particleMassLength; i++)    {
         for (int j = 0; j < particleMassHeight; j++)    {
-            particleXPositions[index] = spacing + 2 * particleRadius * i; //+ (j % 2 == 0 ? particleRadius : 0);
-            particleYPositions[index++] = spacing + 2 * particleRadius * j;
+            particleXPositions[index] = 30 * spacing + 2 * particleRadius * i; //+ (j % 2 == 0 ? particleRadius : 0);
+            particleYPositions[index++] = 3 * spacing + 2 * particleRadius * j;
         }
     }
 
@@ -52,6 +52,7 @@ int Fluid::IX(int x, int y) {
 
 void Fluid::simulateFluid() {
     // Implement simulation cycle here - transfer to grid, solve incompressibility, transfer from grid.
+    detectBoundaryCollisions();
     transferVelocitiesToGrid();
     if (BETTER_PROJECTION)  {
         projectPCG();
@@ -61,5 +62,4 @@ void Fluid::simulateFluid() {
     }
     transferVelocitiesFromGrid();
     advect();
-    detectBoundaryCollisions();
 }

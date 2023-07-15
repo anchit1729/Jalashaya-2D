@@ -5,66 +5,82 @@
 
 void Fluid::transferVelocitiesToGrid() {
     // Transfer velocities of particles to their nearby grid side faces
-    // First, store a copy of previous velocity field values (for FLIP)
+    //std::cout << "Transferring velocities to grid...\n";
+    // First, as part of the FLIP method, we store a copy of all grid velocities
     prevXVelocities = xVelocities;
     prevYVelocities = yVelocities;
-    std::fill(xVelocities.begin(), xVelocities.end(), 0);
-    std::fill(yVelocities.begin(), yVelocities.end(), 0);
-    std::fill(xR.begin(), xR.end(), 0);
-    std::fill(yR.begin(), yR.end(), 0);
+    // Now, reset the velocity values
+    std::fill(xVelocities.begin(), xVelocities.end(), 0.0);
+    std::fill(yVelocities.begin(), yVelocities.end(), 0.0);
+    // Also, make sure delta values are set to 0.0
+    std::fill(xR.begin(), xR.end(), 0.0);
+    std::fill(yR.begin(), yR.end(), 0.0);
 
-    // Next, mark all boundary cells as solid cells
+    // Next, mark all boundary cells as solid cells to begin with
     for (int i = 0; i < gridLength; i++)  {
         for (int j = 0; j < gridHeight; j++)    {
-            int cellIX = IX(i, j);
-            if (i == 0 || i == gridLength - 1 || j == 0 || j == gridHeight - 1) cellType[cellIX] = SOLID;
-            else cellType[cellIX] = EMPTY;
+            int cellIndex = i * gridHeight + j;
+            if (i == 0 || i == gridLength - 1 || j == gridHeight - 1 || j == 0) cellType[cellIndex] = SOLID;
+            else cellType[cellIndex] = EMPTY;
         }
     }
-
-    // Mark all EMPTY cells that contain fluid
+    // Iterate over particles and mark fluid cells accordingly
     for (int i = 0; i < numParticles; i++)  {
+        // Compute the cell coordinates
         int cellXCoordinate = Utils::clamp(floor(particleXPositions[i] / spacing), 0, gridLength - 1);
         int cellYCoordinate = Utils::clamp(floor(particleYPositions[i] / spacing), 0, gridHeight - 1);
-        int cellIX = IX(cellXCoordinate, cellYCoordinate);
-        if (cellType[cellIX] == EMPTY) cellType[cellIX] = FLUID;
-    }
+        // Mark the cell as FLUID if not done already
+        int cellIndex = cellXCoordinate * gridHeight + cellYCoordinate;
 
-    // Now, begin with transferring all x velocity components
-    float yShift = 0.5 * spacing; // Bring the grid up/down by half the spacing to align corners with cell centres
+        if (cellXCoordinate < 0 || cellXCoordinate > gridLength - 1) std::cerr << "X out of bounds!\n";
+        if (cellYCoordinate < 0 || cellYCoordinate > gridHeight - 1) std::cerr << "Y out of bounds!\n";
+        if (cellType[cellIndex] == EMPTY) cellType[cellIndex] = FLUID;
+    }
+    // Now, commence transfer to grid
+    // Part 1: Transfer X velocities
+    float yShift = 0.5 * spacing; // Shift downwards to account for staggered grid
     for (int i = 0; i < numParticles; i++)  {
+        // Again, compute the cell coordinates
         float x = Utils::clamp(particleXPositions[i], spacing, (gridLength - 1) * spacing);
         float y = Utils::clamp(particleYPositions[i], spacing, (gridHeight - 1) * spacing);
         int cellXCoordinate = floor(x / spacing);
         int cellYCoordinate = floor((y - yShift) / spacing);
+        // the stuff below shouldn't happen
+        if (cellXCoordinate < 0 || cellXCoordinate > gridLength - 1) std::cerr << "X out of bounds!\n";
+        if (cellYCoordinate < 0 || cellYCoordinate > gridHeight - 1) std::cerr << "Y out of bounds!\n";
         // Extract the remainders (to compute corner weights w1, w2, w3, w4)
         float deltaX = x - cellXCoordinate * spacing;
         float deltaY = (y - yShift) - cellYCoordinate * spacing;
-        // Compute corner weights
+        // Now construct the corner weights
         float w1 = (1.0 - (deltaX / spacing)) * (1.0 - (deltaY / spacing));
         float w2 = (deltaX / spacing) * (1.0 - (deltaY / spacing));
         float w3 = (deltaX / spacing) * (deltaY / spacing);
         float w4 = (1.0 - (deltaX / spacing)) * (deltaY / spacing);
-        // Next, compute the cell corners
-        int c1 = IX(cellXCoordinate, cellYCoordinate);
-        int c2 = IX(cellXCoordinate + 1, cellYCoordinate);
-        int c3 = IX(cellXCoordinate + 1, cellYCoordinate + 1);
-        int c4 = IX(cellXCoordinate, cellYCoordinate + 1);
-        // Finally perform velocity transfer
-        float v = particleXVelocities[i];
-        xVelocities[c1] = v * w1; xR[c1] += w1;
-        xVelocities[c2] = v * w2; xR[c2] += w2;
-        xVelocities[c3] = v * w3; xR[c3] += w3;
-        xVelocities[c4] = v * w4; xR[c4] += w4;
+        // From here, compute the cell corners responsible for each weight
+        int corner1 = cellXCoordinate * gridHeight + cellYCoordinate;
+        int corner2 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + cellYCoordinate;
+        int corner3 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
+        int corner4 = cellXCoordinate * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
+        // Finally, transfer particle velocity to the cell marks
+        float particleVelocity = particleXVelocities[i];
+        if (corner1 < 0 || corner1 >= numCells) std::cerr << "1 Out of bounds!!\n";
+        if (corner2 < 0 || corner2 >= numCells) std::cerr << "2 Out of bounds!!\n";
+        if (corner3 < 0 || corner3 >= numCells) std::cerr << "3 Out of bounds!!\n";
+        if (corner4 < 0 || corner4 >= numCells) std::cerr << "4 Out of bounds!!\n";
+        xVelocities[corner1] += particleVelocity * w1; xR[corner1] += w1;
+        xVelocities[corner2] += particleVelocity * w2; xR[corner2] += w2;
+        xVelocities[corner3] += particleVelocity * w3; xR[corner3] += w3;
+        xVelocities[corner4] += particleVelocity * w4; xR[corner4] += w4;
+    }
+    // Wrap up the X velocity transfer by restoring solid cell velocities as well as dividing by delta values (these are the summed weights from inverse bilinear interpolation)
+    for (int i = 0; i < xVelocities.size(); i++)    {
+        if (xR[i] > 0.0) xVelocities[i] /= xR[i];
     }
 
-    for (int i = 0; i < numCells; i++)  {
-        if (xR[i] > 0) xVelocities[i] /= xR[i];
-    }
-
-    // Next up, transfer y velocity components
-    float xShift = 0.5 * spacing;
+    // Part 2: Transfer Y velocities
+    float xShift = 0.5 * spacing; // Shift sideways to account for staggered grid
     for (int i = 0; i < numParticles; i++)  {
+        // Again, compute the cell coordinates
         float x = Utils::clamp(particleXPositions[i], spacing, (gridLength - 1) * spacing);
         float y = Utils::clamp(particleYPositions[i], spacing, (gridHeight - 1) * spacing);
         int cellXCoordinate = floor((x - xShift) / spacing);
@@ -72,34 +88,38 @@ void Fluid::transferVelocitiesToGrid() {
         // Extract the remainders (to compute corner weights w1, w2, w3, w4)
         float deltaX = (x - xShift) - cellXCoordinate * spacing;
         float deltaY = y - cellYCoordinate * spacing;
-        // Compute corner weights
+        // Now construct the corner weights
         float w1 = (1.0 - (deltaX / spacing)) * (1.0 - (deltaY / spacing));
         float w2 = (deltaX / spacing) * (1.0 - (deltaY / spacing));
         float w3 = (deltaX / spacing) * (deltaY / spacing);
         float w4 = (1.0 - (deltaX / spacing)) * (deltaY / spacing);
-        // Next, compute cell corners
-        int c1 = IX(cellXCoordinate, cellYCoordinate);
-        int c2 = IX(cellXCoordinate + 1, cellYCoordinate);
-        int c3 = IX(cellXCoordinate + 1, cellYCoordinate + 1);
-        int c4 = IX(cellXCoordinate, cellYCoordinate + 1);
-        // Finally, perform velocity transfer
-        float v = particleYVelocities[i];
-        yVelocities[c1] = v * w1; yR[c1] += w1;
-        yVelocities[c2] = v * w2; yR[c2] += w2;
-        yVelocities[c3] = v * w3; yR[c3] += w3;
-        yVelocities[c4] = v * w4; yR[c4] += w4;
+        // From here, compute the cell corners responsible for each weight
+        int corner1 = cellXCoordinate * gridHeight + cellYCoordinate;
+        int corner2 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + cellYCoordinate;
+        int corner3 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
+        int corner4 = cellXCoordinate * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
+        // Finally, transfer particle velocity to the cell marks
+        float particleVelocity = particleYVelocities[i];
+        yVelocities[corner1] += particleVelocity * w1; yR[corner1] += w1;
+        yVelocities[corner2] += particleVelocity * w2; yR[corner2] += w2;
+        yVelocities[corner3] += particleVelocity * w3; yR[corner3] += w3;
+        yVelocities[corner4] += particleVelocity * w4; yR[corner4] += w4;
     }
-
-    for (int i = 0; i < numCells; i++)  {
-        if (yR[i] > 0) yVelocities[i] /= yR[i];
+    // Wrap up the Y velocity transfer by restoring solid cell velocities as well as dividing by delta values (these are the summed weights from inverse bilinear interpolation)
+    for (int i = 0; i < yVelocities.size(); i++)    {
+        if (yR[i] > 0.0) yVelocities[i] /= yR[i];
     }
+    //std::cout << "Velocity transfer complete.\n";
 
-    // Finally, restore solid cell velocities to zero
-    for (int i = 0; i < gridLength; i++)    {
-        for (int j = 0; j < gridHeight; j++)    {
-            if (cellType[IX(i, j)] == SOLID || cellType[IX(i - 1, j)] == SOLID) xVelocities[IX(i, j)] = prevXVelocities[IX(i, j)];
-            if (cellType[IX(i, j)] == SOLID || cellType[IX(i, j - 1)] == SOLID) yVelocities[IX(i, j)] = prevYVelocities[IX(i, j)];
+    // restore grid velocities for solid cells
+    for (int i = 0; i < gridLength; i++) {
+        for (int j = 0; j < gridHeight; j++) {
+            if (cellType[IX(i, j)] == SOLID || cellType[IX(i - 1, j)] == SOLID)   {
+                xVelocities[IX(i, j)] = prevXVelocities[IX(i, j)];
+            }
+            if (cellType[IX(i, j)] == SOLID || cellType[IX(i, j - 1)] == SOLID)   {
+                yVelocities[IX(i, j)] = prevYVelocities[IX(i, j)];
+            }
         }
     }
-
 }

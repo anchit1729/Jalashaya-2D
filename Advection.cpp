@@ -15,8 +15,8 @@ void Fluid::advect() {
 
 void Fluid::detectBoundaryCollisions() {
     // First, set a minimum and maximum limit for particles to be located at
-    float minX = spacing + particleRadius;
-    float minY = spacing + particleRadius;
+    float minX = 2 * particleRadius;
+    float minY = 2 * particleRadius;
     float maxX = spacing * (gridLength - 1) - particleRadius;
     float maxY = spacing * (gridHeight - 1) - particleRadius;
     // Iterate over all particles, see whether they are colliding with any boundaries
