@@ -9,9 +9,6 @@ Fluid::Fluid() {
     // Initialize the grid velocities
     xVelocities.resize(numCells, 0.0);
     yVelocities.resize(numCells, 0.0);
-    // Initialize the marker array
-    xMarker.resize(numCells, INT_MAX);
-    yMarker.resize(numCells, INT_MAX);
     // Initialize the previous grid velocities
     prevXVelocities.resize(numCells, 0.0);
     prevYVelocities.resize(numCells, 0.0);
@@ -24,9 +21,6 @@ Fluid::Fluid() {
     cellParticleDensity.resize(numCells, 0.0);
     initialParticleDensity = 0;
     // Initialize the unbounded spatial hash table
-    spatialHashTableSize = numParticles + 1;
-    spatialHashTable.resize(2 * (spatialHashTableSize - 1) + 1, 0);
-    spatialHashParticles.resize(numParticles);
 
     // For PCG Projection
     density = 1000.0;
@@ -47,12 +41,7 @@ Fluid::Fluid() {
             particleYPositions[index++] = spacing + 2 * particleRadius * j;
         }
     }
-    for (int i = 0; i < numParticles; i++) {
-        float particleXCoordinate = 3 * spacing + 2 * particleRadius * (i % (gridLength)); // 2 particles per cell in X direction
-        float particleYCoordinate = 3 * spacing + 2 * particleRadius * (i / (gridLength)); // 2 particles per cell in Y direction
-        //particleXPositions[i] = particleXCoordinate;
-        //particleYPositions[i] = particleYCoordinate;
-    }
+
     containerWallXVelocity = 0;
     containerWallYVelocity = 0;
 
@@ -66,22 +55,15 @@ int Fluid::IX(int x, int y) {
 
 void Fluid::simulateFluid() {
     // Implement simulation cycle here - transfer to grid, solve incompressibility, transfer from grid.
-    //std::cout << "Simulating fluid...\n";
-    advect();
-    detectBoundaryCollisions();
-    if (PENALTY) {
-        spatialHashing();
-        detectParticleCollisions();
-    }
     transferVelocitiesToGrid();
-    extrapolateVelocities();
     if (BETTER_PROJECTION)  {
         projectPCG();
     } else {
         computeCellDensities();
         projectGS();
     }
-    extrapolateVelocities();
     transferVelocitiesFromGrid();
+    advect();
+    detectBoundaryCollisions();
     //std::cout << "Simulation step complete.\n";
 }

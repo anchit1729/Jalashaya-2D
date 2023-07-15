@@ -113,7 +113,7 @@ void Fluid::projectPCG() {
                 }
             } else  {
                 // mark unknown
-                xMarker[cellCoordinate] = INT_MAX;
+                xVelocities[cellCoordinate] = 0;
             }
             if (cellType[bottomCellCoordinate] == FLUID || cellType[cellCoordinate] == FLUID)   {
                 if (cellType[bottomCellCoordinate] == SOLID || cellType[cellCoordinate] == SOLID)   {
@@ -123,7 +123,7 @@ void Fluid::projectPCG() {
                 }
             } else  {
                 // mark unknown
-                yMarker[cellCoordinate] = INT_MAX;
+                yVelocities[cellCoordinate] = 0;
             }
         }
     }
