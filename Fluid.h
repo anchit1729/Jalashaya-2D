@@ -5,9 +5,6 @@
 #include <cmath>
 #include <vector>
 #include "Utils.h"
-#include "Eigen/Dense"
-#include "Eigen/Sparse"
-#include "Eigen/IterativeLinearSolvers"
 
 #ifndef FLUIDSIM_FLUID_H
 #define FLUIDSIM_FLUID_H
@@ -21,17 +18,11 @@
 #define FLUID 0
 #define EMPTY 1
 #define PUSH_PENALTY 0.1
-#define BETTER_PROJECTION false
 #define BETTER_INTEGRATION true
 #define TIMESTEP 1.0/60.0
 #define SUBSTEPS 2
-#define PENALTY true
+#define PENALTY false
 #define PIC 0.1
-
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
-using Eigen::SparseMatrix;
-using Eigen::ConjugateGradient;
 
 class Fluid {
 public:
@@ -57,11 +48,6 @@ public:
     // Each grid cell should also be marked as being solid, fluid or empty
     std::vector<int> cellType;
 
-    // For Conjugate Gradient implementation in Eigen
-    SparseMatrix<double> A; // coefficient matrix
-    VectorXd pressure; // pressure vector
-    float density = 1000;
-    VectorXd divergence; // divergence vector
     // To make sure drift doesn't occur (i.e. volume loss), we track particle density in each cell
     // This density must remain within a required range at all times, displacing any excess particles
     std::vector<float> cellParticleDensity;
@@ -89,11 +75,6 @@ public:
     float containerWallXVelocity;
     float containerWallYVelocity;
 
-    // For surface reconstruction, we need to store grid point distances
-    std::vector<float> pointDistance;
-    // we also need to store indices of the closest point
-    std::vector<int> closestPointIndices;
-
     // Finally, we come to functions
     Fluid();
     void simulateFluid();
@@ -107,15 +88,11 @@ public:
     void transferVelocitiesFromGrid();
     // Projection
     void projectGS();
-    void projectPCG();
     void computeCellDensities();
     // Spatial Hashing (for collision detection)
     int spatialHashFunction(int x, int y);
     void spatialHashing();
     void detectParticleCollisions();
-    // Surface reconstruction
-    float distance(std::tuple<int, int> x, std::tuple<float, float> p);
-    void computeSignedDistance();
 };
 
 

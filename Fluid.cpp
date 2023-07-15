@@ -28,15 +28,6 @@ Fluid::Fluid() {
     spatialHashTable.resize(2 * (spatialHashTableSize - 1) + 1, 0);
     spatialHashParticles.resize(numParticles);
 
-    // For PCG Projection
-    A = SparseMatrix<double>(numCells, numCells);
-    pressure = VectorXd(numCells);
-    density = 1000.0;
-    divergence = VectorXd(numCells);
-    A.setZero();
-    pressure.setZero();
-    divergence.setZero();
-
     // Part 2: Initialize particle stuff
     // Initialize the particle positions
     particleXPositions.resize(numParticles, 0.0);
@@ -53,17 +44,10 @@ Fluid::Fluid() {
             particleYPositions[index++] = spacing + 2 * particleRadius * j;
         }
     }
-    for (int i = 0; i < numParticles; i++) {
-        float particleXCoordinate = 3 * spacing + 2 * particleRadius * (i % (gridLength)); // 2 particles per cell in X direction
-        float particleYCoordinate = 3 * spacing + 2 * particleRadius * (i / (gridLength)); // 2 particles per cell in Y direction
-        //particleXPositions[i] = particleXCoordinate;
-        //particleYPositions[i] = particleYCoordinate;
-    }
+
     containerWallXVelocity = 0;
     containerWallYVelocity = 0;
 
-    pointDistance.resize(numCells, INT_MAX);
-    closestPointIndices.resize(numCells, -1);
 }
 
 int Fluid::IX(int x, int y) {
@@ -72,7 +56,6 @@ int Fluid::IX(int x, int y) {
 
 void Fluid::simulateFluid() {
     // Implement simulation cycle here - transfer to grid, solve incompressibility, transfer from grid.
-    //std::cout << "Simulating fluid...\n";
     advect();
     detectBoundaryCollisions();
     if (PENALTY) {
@@ -81,13 +64,8 @@ void Fluid::simulateFluid() {
     }
     transferVelocitiesToGrid();
     extrapolateVelocities();
-    if (BETTER_PROJECTION)  {
-        projectPCG();
-    } else {
-        computeCellDensities();
-        projectGS();
-    }
+    computeCellDensities();
+    projectGS();
     extrapolateVelocities();
     transferVelocitiesFromGrid();
-    //std::cout << "Simulation step complete.\n";
 }
