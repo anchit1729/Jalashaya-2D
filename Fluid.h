@@ -103,10 +103,6 @@ public:
     void computeCellDensities();
     // Utility function for clamping
     static float clamp(float val, float min, float max);
-    // Spatial Hashing (for collision detection)
-    int spatialHashFunction(int x, int y);
-    void spatialHashing();
-    void detectParticleCollisions();
 };
 
 
