@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
-#include "Utils.h"
+
 #include "Eigen/Dense"
 #include "Eigen/Sparse"
 #include "Eigen/IterativeLinearSolvers"
@@ -12,24 +12,24 @@
 #ifndef FLUIDSIM_FLUID_H
 #define FLUIDSIM_FLUID_H
 // Defining grid dimensions
-#define LENGTH 200
-#define HEIGHT 200
+#define LENGTH 1000
+#define HEIGHT 1000
 // Defining the number of fluid particles along each dimension
 #define XDIM 60
-#define YDIM 60
+#define YDIM 100
 // Defining the grid cell spacing
-#define SPACING 2.0
+#define SPACING 10.0
 // Defining the multiplication factor for particle size in terms of grid cell spacing (each particle is PARTICLE_SIZE * SPACING in radius)
-#define PARTICLE_SIZE 0.25
+#define PARTICLE_SIZE 0.22
 #define FLUID 0
 #define EMPTY 1
 #define SOLID 2
 // Defining whether to use PCG (better but slower but also parallel) or GS (standard)
-#define BETTER_PROJECTION false
+#define BETTER_PROJECTION true
 // Defining the time-step size
 #define TIMESTEP 1.0/60.0
 // Defining the number of sub-steps (to satisfy CFL condition)
-#define SUBSTEPS 4
+#define SUBSTEPS 1
 // Defining the PIC/FLIP blending ratio
 #define PIC 0.1
 
@@ -51,6 +51,9 @@ public:
     // Current velocities
     std::vector<float> xVelocities; // Stores the X velocity of the grid cell face on the left
     std::vector<float> yVelocities; // Stores the Y velocity of the grid cell face on the right
+    // Marker values
+    std::vector<int> xMarker;
+    std::vector<int> yMarker;
     // Previous velocities
     std::vector<float> prevXVelocities; // Similar to regular xVelocities vector
     std::vector<float> prevYVelocities; // Similar to regular yVelocities vector
@@ -88,6 +91,7 @@ public:
     int IX(int x, int y);
     // Advection
     void advect();
+    void extrapolateVelocities();
     void detectBoundaryCollisions();
     // Transfer
     void transferVelocitiesToGrid();
@@ -96,6 +100,8 @@ public:
     void projectGS();
     void projectPCG();
     void computeCellDensities();
+    // Utility function for clamping
+    static float clamp(float val, float min, float max);
 };
 
 

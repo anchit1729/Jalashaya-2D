@@ -17,22 +17,22 @@ void Fluid::projectPCG() {
     A.reserve(VectorXd::Constant(numCells, 5)); // at most 5 non-zero elements per row in 2D
     // Step 1: Set up the divergence matrix
     float scale = 1.0 / spacing;
-    for (int cellXCoordinate = 1; cellXCoordinate < gridLength-1; cellXCoordinate++)    {
-        for (int cellYCoordinate = 1; cellYCoordinate < gridHeight-1; cellYCoordinate++)    {
+    for (int cellXCoordinate = 0; cellXCoordinate < gridLength; cellXCoordinate++)    {
+        for (int cellYCoordinate = 0; cellYCoordinate < gridHeight; cellYCoordinate++)    {
             if (cellType[IX(cellXCoordinate, cellYCoordinate)] == FLUID)    {
                 divergence[IX(cellXCoordinate, cellYCoordinate)] = -scale * (xVelocities[IX(cellXCoordinate+1, cellYCoordinate)] - xVelocities[IX(cellXCoordinate, cellYCoordinate)] + yVelocities[IX(cellXCoordinate, cellYCoordinate+1)] - yVelocities[IX(cellXCoordinate, cellYCoordinate)]);
             }
         }
     }
-    for (int cellXCoordinate = 1; cellXCoordinate < gridLength-1; cellXCoordinate++)  {
-        for (int cellYCoordinate = 1; cellYCoordinate < gridHeight-1; cellYCoordinate++)  {
-            if (cellType[cellXCoordinate * gridHeight + cellYCoordinate] == FLUID)  {
+    for (int cellXCoordinate = 0; cellXCoordinate < gridLength; cellXCoordinate++)  {
+        for (int cellYCoordinate = 0; cellYCoordinate < gridHeight; cellYCoordinate++)  {
+            if (cellType[IX(cellXCoordinate, cellYCoordinate)] == FLUID)  {
                 // compute the negative divergence for all fluid cells
-                int cellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate;
-                int rightCellCoordinate = (cellXCoordinate + 1) * gridHeight + cellYCoordinate;
-                int topCellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate + 1;
-                int leftCellCoordinate = (cellXCoordinate - 1) * gridHeight + cellYCoordinate;
-                int bottomCellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate - 1;
+                int cellCoordinate = IX(cellXCoordinate, cellYCoordinate);
+                int rightCellCoordinate = IX(cellXCoordinate + 1, cellYCoordinate);
+                int topCellCoordinate = IX(cellXCoordinate, cellYCoordinate + 1);
+                int leftCellCoordinate = IX(cellXCoordinate - 1, cellYCoordinate);
+                int bottomCellCoordinate = IX(cellXCoordinate, cellYCoordinate - 1);
                 // When accounting for solids, we assume solid wall velocity = 0
                 if (cellType[leftCellCoordinate] == SOLID)    {
                     divergence[cellCoordinate] -= scale * (xVelocities[cellCoordinate]);
@@ -53,14 +53,14 @@ void Fluid::projectPCG() {
     // NOTE: We exploit symmetry, thus using only positive direction variables
     float dt = TIMESTEP / SUBSTEPS;
     scale = dt / (density * spacing * spacing);
-    for (int cellXCoordinate = 1; cellXCoordinate < gridLength-1; cellXCoordinate++)  {
-        for (int cellYCoordinate = 1; cellYCoordinate < gridHeight-1; cellYCoordinate++)  {
-            if (cellType[cellXCoordinate * gridHeight + cellYCoordinate] == FLUID)  {
-                int leftCellCoordinate = (cellXCoordinate - 1) * gridHeight + cellYCoordinate;
-                int rightCellCoordinate = (cellXCoordinate + 1) * gridHeight + cellYCoordinate;
-                int bottomCellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate - 1;
-                int topCellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate + 1;
-                int cellCoordinate = cellXCoordinate * gridHeight + cellYCoordinate;
+    for (int cellXCoordinate = 0; cellXCoordinate < gridLength; cellXCoordinate++)  {
+        for (int cellYCoordinate = 0; cellYCoordinate < gridHeight; cellYCoordinate++)  {
+            if (cellType[IX(cellXCoordinate, cellYCoordinate)] == FLUID)  {
+                int leftCellCoordinate = IX(cellXCoordinate - 1, cellYCoordinate);
+                int rightCellCoordinate = IX(cellXCoordinate + 1, cellYCoordinate);
+                int bottomCellCoordinate = IX(cellXCoordinate, cellYCoordinate - 1);
+                int topCellCoordinate = IX(cellXCoordinate, cellYCoordinate + 1);
+                int cellCoordinate = IX(cellXCoordinate, cellYCoordinate);
                 // handle negative x neighbor
                 if (cellType[leftCellCoordinate] == FLUID)  {
                     A.coeffRef(cellCoordinate, cellCoordinate) += scale;
@@ -93,11 +93,13 @@ void Fluid::projectPCG() {
     // Step 3: Run the PCG algorithm with Eigen
     ConjugateGradient<SparseMatrix<double>, Eigen::UpLoType::Lower|Eigen::UpLoType::Upper> cg;
     cg.setMaxIterations(250);
-    cg.setTolerance(1e-6);
+    cg.setTolerance(1e-9);
     cg.compute(A);
     pressure = cg.solve(divergence);
-    std::cout << "Iteration count: " << cg.iterations() << std::endl;
-    std::cout << "Estimated error: " << cg.error() << std::endl;
+    if (cg.iterations() > 220)  {
+        std::cerr << "Iteration count: " << cg.iterations() << std::endl;
+        std::cerr << "Estimated error: " << cg.error() << std::endl;
+    }
     // Step 4: Use pressure estimates to compute velocity updates
     scale = dt / (density * spacing);
     for (int cellXCoordinate = 1; cellXCoordinate < gridLength-1; cellXCoordinate++)  {
@@ -111,9 +113,10 @@ void Fluid::projectPCG() {
                 } else  {
                     xVelocities[cellCoordinate] -= scale * (pressure[cellCoordinate] - pressure[leftCellCoordinate]);
                 }
+                xMarker[cellCoordinate] = 0;
             } else  {
                 // mark unknown
-                //xVelocities[cellCoordinate] = 0;
+                xMarker[cellCoordinate] = INT_MAX;
             }
             if (cellType[bottomCellCoordinate] == FLUID || cellType[cellCoordinate] == FLUID)   {
                 if (cellType[bottomCellCoordinate] == SOLID || cellType[cellCoordinate] == SOLID)   {
@@ -121,9 +124,10 @@ void Fluid::projectPCG() {
                 } else  {
                     yVelocities[cellCoordinate] -= scale * (pressure[cellCoordinate] - pressure(bottomCellCoordinate));
                 }
+                yMarker[cellCoordinate] = 0;
             } else  {
                 // mark unknown
-                //yVelocities[cellCoordinate] = 0;
+                yMarker[cellCoordinate] = INT_MAX;
             }
         }
     }
@@ -191,8 +195,8 @@ void Fluid::computeCellDensities() {
     // Now, iterate over all particles
     for (int i = 0; i < numParticles; i++)  {
         // Same idea as velocity transfer - find out which cell a particle belongs to and update the particle density for that cell
-        float x = Utils::clamp(particleXPositions[i], spacing, (gridLength - 1) * spacing);
-        float y = Utils::clamp(particleYPositions[i], spacing, (gridHeight - 1) * spacing);
+        float x = clamp(particleXPositions[i], spacing, (gridLength - 1) * spacing);
+        float y = clamp(particleYPositions[i], spacing, (gridHeight - 1) * spacing);
         int cellXCoordinate = floor((x - xShift) / spacing);
         int cellYCoordinate = floor((y - yShift) / spacing);
         float deltaX = (x - xShift) - (float)cellXCoordinate * spacing;

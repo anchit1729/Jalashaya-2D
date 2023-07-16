@@ -9,6 +9,9 @@ Fluid::Fluid() {
     // Initialize the grid velocities
     xVelocities.resize(numCells, 0.0);
     yVelocities.resize(numCells, 0.0);
+    // Initialize the marker values
+    xMarker.resize(numCells, INT_MAX);
+    yMarker.resize(numCells, INT_MAX);
     // Initialize the previous grid velocities
     prevXVelocities.resize(numCells, 0.0);
     prevYVelocities.resize(numCells, 0.0);
@@ -37,7 +40,7 @@ Fluid::Fluid() {
     int index = 0;
     for (int i = 0; i < particleMassLength; i++)    {
         for (int j = 0; j < particleMassHeight; j++)    {
-            particleXPositions[index] = 30 * spacing + 2 * particleRadius * i; //+ (j % 2 == 0 ? particleRadius : 0);
+            particleXPositions[index] = 29 * spacing + 2 * particleRadius * i; //+ (j % 2 == 0 ? particleRadius : 0);
             particleYPositions[index++] = 3 * spacing + 2 * particleRadius * j;
         }
     }
@@ -50,16 +53,24 @@ int Fluid::IX(int x, int y) {
     return x * gridHeight + y;
 }
 
+float Fluid::clamp(float val, float min, float max) {
+    if (val < min) return min;
+    if (val > max) return max;
+    return val;
+}
+
 void Fluid::simulateFluid() {
     // Implement simulation cycle here - transfer to grid, solve incompressibility, transfer from grid.
     detectBoundaryCollisions();
     transferVelocitiesToGrid();
+    extrapolateVelocities();
     if (BETTER_PROJECTION)  {
         projectPCG();
     } else {
         computeCellDensities();
         projectGS();
     }
+    extrapolateVelocities();
     transferVelocitiesFromGrid();
     advect();
 }
