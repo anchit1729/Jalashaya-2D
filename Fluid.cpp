@@ -25,9 +25,6 @@ Fluid::Fluid() {
     initialParticleDensity = 0;
     // Initialize the unbounded spatial hash table
 
-    // For PCG Projection
-    density = 1000.0;
-
     // Part 2: Initialize particle stuff
     // Initialize the particle positions
     particleXPositions.resize(numParticles, 0.0);
@@ -47,6 +44,7 @@ Fluid::Fluid() {
 
     containerWallXVelocity = 0;
     containerWallYVelocity = 0;
+
 }
 
 int Fluid::IX(int x, int y) {
@@ -64,13 +62,10 @@ void Fluid::simulateFluid() {
     detectBoundaryCollisions();
     transferVelocitiesToGrid();
     extrapolateVelocities();
-    if (BETTER_PROJECTION)  {
-        projectPCG();
-    } else {
-        computeCellDensities();
-        projectGS();
-    }
+    computeCellDensities();
+    projectGS();
     extrapolateVelocities();
     transferVelocitiesFromGrid();
     advect();
+
 }

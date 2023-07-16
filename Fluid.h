@@ -5,9 +5,11 @@
 #include <cmath>
 #include <vector>
 
+
 #include "Eigen/Dense"
 #include "Eigen/Sparse"
 #include "Eigen/IterativeLinearSolvers"
+
 
 #ifndef FLUIDSIM_FLUID_H
 #define FLUIDSIM_FLUID_H
@@ -31,12 +33,12 @@
 // Defining the number of sub-steps (to satisfy CFL condition)
 #define SUBSTEPS 1
 // Defining the PIC/FLIP blending ratio
+#define PUSH_PENALTY 0.1
+#define BETTER_INTEGRATION true
+#define TIMESTEP 1.0/60.0
+#define SUBSTEPS 2
+#define PENALTY false
 #define PIC 0.1
-
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
-using Eigen::SparseMatrix;
-using Eigen::ConjugateGradient;
 
 class Fluid {
 public:
@@ -98,10 +100,13 @@ public:
     void transferVelocitiesFromGrid();
     // Projection
     void projectGS();
-    void projectPCG();
     void computeCellDensities();
     // Utility function for clamping
     static float clamp(float val, float min, float max);
+    // Spatial Hashing (for collision detection)
+    int spatialHashFunction(int x, int y);
+    void spatialHashing();
+    void detectParticleCollisions();
 };
 
 

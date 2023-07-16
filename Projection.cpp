@@ -133,6 +133,7 @@ void Fluid::projectPCG() {
     }
 }
 
+
 void Fluid::projectGS() {
     // Gauss-Seidel solver (without vectorization)
     prevXVelocities = xVelocities;
