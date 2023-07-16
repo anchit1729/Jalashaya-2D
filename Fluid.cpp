@@ -9,7 +9,7 @@ Fluid::Fluid() {
     // Initialize the grid velocities
     xVelocities.resize(numCells, 0.0);
     yVelocities.resize(numCells, 0.0);
-    // Initialize the marker array
+    // Initialize the marker values
     xMarker.resize(numCells, INT_MAX);
     yMarker.resize(numCells, INT_MAX);
     // Initialize the previous grid velocities
@@ -24,9 +24,6 @@ Fluid::Fluid() {
     cellParticleDensity.resize(numCells, 0.0);
     initialParticleDensity = 0;
     // Initialize the unbounded spatial hash table
-    spatialHashTableSize = numParticles + 1;
-    spatialHashTable.resize(2 * (spatialHashTableSize - 1) + 1, 0);
-    spatialHashParticles.resize(numParticles);
 
     // Part 2: Initialize particle stuff
     // Initialize the particle positions
@@ -40,8 +37,8 @@ Fluid::Fluid() {
     int index = 0;
     for (int i = 0; i < particleMassLength; i++)    {
         for (int j = 0; j < particleMassHeight; j++)    {
-            particleXPositions[index] = spacing + 2 * particleRadius * i; //+ (j % 2 == 0 ? particleRadius : 0);
-            particleYPositions[index++] = spacing + 2 * particleRadius * j;
+            particleXPositions[index] = 29 * spacing + 2 * particleRadius * i; //+ (j % 2 == 0 ? particleRadius : 0);
+            particleYPositions[index++] = 3 * spacing + 2 * particleRadius * j;
         }
     }
 
@@ -54,18 +51,21 @@ int Fluid::IX(int x, int y) {
     return x * gridHeight + y;
 }
 
+float Fluid::clamp(float val, float min, float max) {
+    if (val < min) return min;
+    if (val > max) return max;
+    return val;
+}
+
 void Fluid::simulateFluid() {
     // Implement simulation cycle here - transfer to grid, solve incompressibility, transfer from grid.
-    advect();
     detectBoundaryCollisions();
-    if (PENALTY) {
-        spatialHashing();
-        detectParticleCollisions();
-    }
     transferVelocitiesToGrid();
     extrapolateVelocities();
     computeCellDensities();
     projectGS();
     extrapolateVelocities();
     transferVelocitiesFromGrid();
+    advect();
+
 }

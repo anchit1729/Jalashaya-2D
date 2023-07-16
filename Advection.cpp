@@ -5,9 +5,8 @@
 
 void Fluid::advect() {
     float dt = TIMESTEP/SUBSTEPS;
-    // First, integrate the velocities and then integrate the positions
     //We try out an RK3 setup
-    if (BETTER_INTEGRATION) {
+    if (true) {
         for (int i = 0; i < numParticles; i++)  {
             // Extract stage 1 values, k1_i
             float k1_x = particleXVelocities[i];
@@ -35,13 +34,9 @@ void Fluid::advect() {
             int corner3 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             int corner4 = cellXCoordinate * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             // Proceed with transfer from the grid to particle
-            int offset = gridHeight;
-            // Determine whether contributing corners on grid are valid or not
-            float valid1 = cellType[corner1] != EMPTY || cellType[corner1 - offset] != EMPTY ? 1.0 : 1.0;
-            float valid2 = cellType[corner2] != EMPTY || cellType[corner2 - offset] != EMPTY ? 1.0 : 1.0;
-            float valid3 = cellType[corner3] != EMPTY || cellType[corner3 - offset] != EMPTY ? 1.0 : 1.0;
-            float valid4 = cellType[corner4] != EMPTY || cellType[corner4 - offset] != EMPTY ? 1.0 : 1.0;
-            float d = w1 * valid1 + w2 * valid2 + w3 * valid3 + w4 * valid4;
+
+            float d = w1 + w2 + w3 + w4;
+
             float velocity = particleXVelocities[i];
             if (d > 0.0)    {
                 float picVelocity = (valid1 * w1 * xVelocities[corner1] + valid2 * w2 * xVelocities[corner2] + valid3 * w3 * xVelocities[corner3] + valid4 * w4 * xVelocities[corner4]) / d;
@@ -68,13 +63,9 @@ void Fluid::advect() {
             corner3 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             corner4 = cellXCoordinate * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             // Proceed with transfer from the grid to particle
-            offset = 1;
-            // Determine whether contributing corners on grid are valid or not
-            valid1 = cellType[corner1] != EMPTY || cellType[corner1 - offset] != EMPTY ? 1.0 : 1.0;
-            valid2 = cellType[corner2] != EMPTY || cellType[corner2 - offset] != EMPTY ? 1.0 : 1.0;
-            valid3 = cellType[corner3] != EMPTY || cellType[corner3 - offset] != EMPTY ? 1.0 : 1.0;
-            valid4 = cellType[corner4] != EMPTY || cellType[corner4 - offset] != EMPTY ? 1.0 : 1.0;
-            d = w1 * valid1 + w2 * valid2 + w3 * valid3 + w4 * valid4;
+
+            d = w1 + w2 + w3 + w4;
+
             velocity = particleYVelocities[i];
             if (d > 0.0)    {
                 float picVelocity = (valid1 * w1 * yVelocities[corner1] + valid2 * w2 * yVelocities[corner2] + valid3 * w3 * yVelocities[corner3] + valid4 * w4 * yVelocities[corner4]) / d;
@@ -106,13 +97,9 @@ void Fluid::advect() {
             corner3 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             corner4 = cellXCoordinate * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             // Proceed with transfer from the grid to particle
-            offset = gridHeight;
-            // Determine whether contributing corners on grid are valid or not
-            valid1 = cellType[corner1] != EMPTY || cellType[corner1 - offset] != EMPTY ? 1.0 : 1.0;
-            valid2 = cellType[corner2] != EMPTY || cellType[corner2 - offset] != EMPTY ? 1.0 : 1.0;
-            valid3 = cellType[corner3] != EMPTY || cellType[corner3 - offset] != EMPTY ? 1.0 : 1.0;
-            valid4 = cellType[corner4] != EMPTY || cellType[corner4 - offset] != EMPTY ? 1.0 : 1.0;
-            d = w1 * valid1 + w2 * valid2 + w3 * valid3 + w4 * valid4;
+
+            d = w1 + w2 + w3 + w4;
+
             velocity = particleXVelocities[i];
             if (d > 0.0)    {
                 float picVelocity = (valid1 * w1 * xVelocities[corner1] + valid2 * w2 * xVelocities[corner2] + valid3 * w3 * xVelocities[corner3] + valid4 * w4 * xVelocities[corner4]) / d;
@@ -138,13 +125,9 @@ void Fluid::advect() {
             corner3 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             corner4 = cellXCoordinate * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             // Proceed with transfer from the grid to particle
-            offset = 1;
-            // Determine whether contributing corners on grid are valid or not
-            valid1 = cellType[corner1] != EMPTY || cellType[corner1 - offset] != EMPTY ? 1.0 : 1.0;
-            valid2 = cellType[corner2] != EMPTY || cellType[corner2 - offset] != EMPTY ? 1.0 : 1.0;
-            valid3 = cellType[corner3] != EMPTY || cellType[corner3 - offset] != EMPTY ? 1.0 : 1.0;
-            valid4 = cellType[corner4] != EMPTY || cellType[corner4 - offset] != EMPTY ? 1.0 : 1.0;
-            d = w1 * valid1 + w2 * valid2 + w3 * valid3 + w4 * valid4;
+
+            d = w1 + w2 + w3 + w4;
+
             velocity = particleYVelocities[i];
             if (d > 0.0)    {
                 float picVelocity = (valid1 * w1 * yVelocities[corner1] + valid2 * w2 * yVelocities[corner2] + valid3 * w3 * yVelocities[corner3] + valid4 * w4 * yVelocities[corner4]) / d;
@@ -158,7 +141,7 @@ void Fluid::advect() {
             particleYPositions[i] += (2.0/9.0) * k1_y + (3.0/9.0) * k2_y + (5.0/9.0) * k3_y;
 
             // Also update velocities
-            particleYVelocities[i] += 9.81 * dt;
+            //particleYVelocities[i] += 9.81 * dt;
         }
     }
     else   {
@@ -316,7 +299,7 @@ void Fluid::detectBoundaryCollisions() {
         // Clamp the X and Y coordinates of the particle between boundary coordinates
         if (particleXPositions[i] < minX || particleXPositions[i] > maxX) particleXVelocities[i] = containerWallXVelocity;
         if (particleYPositions[i] < minY || particleYPositions[i] > maxY) particleYVelocities[i] = containerWallYVelocity;
-        particleXPositions[i] = Utils::clamp(particleXPositions[i], minX, maxX);
-        particleYPositions[i] = Utils::clamp(particleYPositions[i], minY, maxY);
+        particleXPositions[i] = clamp(particleXPositions[i], minX, maxX);
+        particleYPositions[i] = clamp(particleYPositions[i], minY, maxY);
     }
 }
