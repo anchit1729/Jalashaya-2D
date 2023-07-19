@@ -1,9 +1,9 @@
 //
 // Created by Anchit Mishra on 2023-04-07.
 //
-#include "Fluid.h"
+#include "fluid.h"
 
-void Fluid::transferVelocitiesFromGrid() {
+void fluid::transferVelocitiesFromGrid() {
     // Transfer velocities from the grid faces to neighboring particles
     // First, transfer X velocities from the grid to particles
     float yShift = 0.5 * spacing;
@@ -27,11 +27,16 @@ void Fluid::transferVelocitiesFromGrid() {
         int corner3 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
         int corner4 = cellXCoordinate * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
         // Proceed with transfer from the grid to particle
-        float d = w1 + w2 + w3 + w4;
+        // Only velocity values taken from SOLID or FLUID cells are valid
+        float v1 = cellType[corner1] != EMPTY || cellType[corner1 - gridHeight] != EMPTY ? 1.0 : 0.0;
+        float v2 = cellType[corner2] != EMPTY || cellType[corner2 - gridHeight] != EMPTY ? 1.0 : 0.0;
+        float v3 = cellType[corner3] != EMPTY || cellType[corner3 - gridHeight] != EMPTY ? 1.0 : 0.0;
+        float v4 = cellType[corner4] != EMPTY || cellType[corner4 - gridHeight] != EMPTY ? 1.0 : 0.0;
+        float d = v1 * w1 + v2 * w2 + v3 * w3 + v4 * w4;
         float velocity = particleXVelocities[i];
         if (d > 0.0)    {
-            float picVelocity = (w1 * xVelocities[corner1] + w2 * xVelocities[corner2] + w3 * xVelocities[corner3] + w4 * xVelocities[corner4]) / d;
-            float weightedVelocityChanges = (w1 * (xVelocities[corner1] - prevXVelocities[corner1]) + w2 * (xVelocities[corner2] - prevXVelocities[corner2]) + w3 * (xVelocities[corner3] - prevXVelocities[corner3]) + w4 * (xVelocities[corner4] - prevXVelocities[corner4])) / d;
+            float picVelocity = (v1 * w1 * xVelocities[corner1] + v2 * w2 * xVelocities[corner2] + v3 * w3 * xVelocities[corner3] + v4 * w4 * xVelocities[corner4]) / d;
+            float weightedVelocityChanges = (v1 * w1 * (xVelocities[corner1] - prevXVelocities[corner1]) + v2 * w2 * (xVelocities[corner2] - prevXVelocities[corner2]) + v3 * w3 * (xVelocities[corner3] - prevXVelocities[corner3]) + v4 * w4 * (xVelocities[corner4] - prevXVelocities[corner4])) / d;
             float flipVelocity = velocity + weightedVelocityChanges;
             particleXVelocities[i] = PIC * picVelocity + (1 - PIC) * flipVelocity;
         }
@@ -59,11 +64,16 @@ void Fluid::transferVelocitiesFromGrid() {
         int corner3 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
         int corner4 = cellXCoordinate * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
         // Proceed with transfer from the grid to particle
-        float d = w1 + w2 + w3 + w4;
+        // Again, only SOLID or FLUID cell velocity values are valid for us
+        float v1 = cellType[corner1] != EMPTY || cellType[corner1 - 1] != EMPTY ? 1.0 : 0.0;
+        float v2 = cellType[corner2] != EMPTY || cellType[corner2 - 1] != EMPTY ? 1.0 : 0.0;
+        float v3 = cellType[corner3] != EMPTY || cellType[corner3 - 1] != EMPTY ? 1.0 : 0.0;
+        float v4 = cellType[corner4] != EMPTY || cellType[corner4 - 1] != EMPTY ? 1.0 : 0.0;
+        float d = v1 * w1 + v2 * w2 + v3 * w3 + v4 * w4;
         float velocity = particleYVelocities[i];
         if (d > 0.0)    {
-            float picVelocity = (w1 * yVelocities[corner1] + w2 * yVelocities[corner2] + w3 * yVelocities[corner3] + w4 * yVelocities[corner4]) / d;
-            float weightedVelocityChanges = (w1 * (yVelocities[corner1] - prevYVelocities[corner1]) + w2 * (yVelocities[corner2] - prevYVelocities[corner2]) + w3 * (yVelocities[corner3] - prevYVelocities[corner3]) + w4 * (yVelocities[corner4] - prevYVelocities[corner4])) / d;
+            float picVelocity = (v1 * w1 * yVelocities[corner1] + v2 * w2 * yVelocities[corner2] + v3 * w3 * yVelocities[corner3] + v4 * w4 * yVelocities[corner4]) / d;
+            float weightedVelocityChanges = (v1 * w1 * (yVelocities[corner1] - prevYVelocities[corner1]) + v2 * w2 * (yVelocities[corner2] - prevYVelocities[corner2]) + v3 * w3 * (yVelocities[corner3] - prevYVelocities[corner3]) + v4 * w4 * (yVelocities[corner4] - prevYVelocities[corner4])) / d;
             float flipVelocity = velocity + weightedVelocityChanges;
             particleYVelocities[i] = PIC * picVelocity + (1 - PIC) * flipVelocity;
             if (x < 2 * spacing && particleYVelocities[i] < 0.1f) particleYVelocities[i] += 0.1f;

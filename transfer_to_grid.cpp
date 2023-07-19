@@ -1,11 +1,10 @@
 //
 // Created by Anchit Mishra on 2023-04-07.
 //
-#include "Fluid.h"
+#include "fluid.h"
 
-void Fluid::transferVelocitiesToGrid() {
+void fluid::transferVelocitiesToGrid() {
     // Transfer velocities of particles to their nearby grid side faces
-    //std::cout << "Transferring velocities to grid...\n";
     // First, as part of the FLIP method, we store a copy of all grid velocities
     prevXVelocities = xVelocities;
     prevYVelocities = yVelocities;
@@ -22,8 +21,8 @@ void Fluid::transferVelocitiesToGrid() {
     // Next, mark all boundary cells as solid cells to begin with
     for (int i = 0; i < gridLength; i++)  {
         for (int j = 0; j < gridHeight; j++)    {
-            int cellIndex = i * gridHeight + j;
-            if (i == 0 || i == gridLength - 1 || j == gridHeight - 1 || j == 0) cellType[cellIndex] = SOLID;
+            int cellIndex = IX(i, j);
+            if (i == gridLength - 1 || j == gridHeight - 1 || i == 0 || j == 0) cellType[cellIndex] = SOLID;
             else cellType[cellIndex] = EMPTY;
         }
     }

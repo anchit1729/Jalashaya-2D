@@ -1,10 +1,10 @@
 //
 // Created by Anchit Mishra on 2023-04-07.
 //
-#include "Fluid.h"
+#include "fluid.h"
 
-void Fluid::advect() {
-    float dt = TIMESTEP/SUBSTEPS;
+void fluid::advect(float dt) {
+    //float dt = TIMESTEP/SUBSTEPS;
     //We try out an RK3 setup
     if (true) {
         for (int i = 0; i < numParticles; i++)  {
@@ -34,13 +34,15 @@ void Fluid::advect() {
             int corner3 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             int corner4 = cellXCoordinate * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             // Proceed with transfer from the grid to particle
-
-            float d = w1 + w2 + w3 + w4;
-
+            float v1 = cellType[corner1] != EMPTY || cellType[corner1 - gridHeight] != EMPTY ? 1.0 : 0.0;
+            float v2 = cellType[corner2] != EMPTY || cellType[corner2 - gridHeight] != EMPTY ? 1.0 : 0.0;
+            float v3 = cellType[corner3] != EMPTY || cellType[corner3 - gridHeight] != EMPTY ? 1.0 : 0.0;
+            float v4 = cellType[corner4] != EMPTY || cellType[corner4 - gridHeight] != EMPTY ? 1.0 : 0.0;
+            float d = v1 * w1 + v2 * w2 + v3 * w3 + v4 * w4;
             float velocity = particleXVelocities[i];
             if (d > 0.0)    {
-                float picVelocity = (valid1 * w1 * xVelocities[corner1] + valid2 * w2 * xVelocities[corner2] + valid3 * w3 * xVelocities[corner3] + valid4 * w4 * xVelocities[corner4]) / d;
-                float weightedVelocityChanges = (valid1 * w1 * (xVelocities[corner1] - prevXVelocities[corner1]) + valid2 * w2 * (xVelocities[corner2] - prevXVelocities[corner2]) + valid3 * w3 * (xVelocities[corner3] - prevXVelocities[corner3]) + valid4 * w4 * (xVelocities[corner4] - prevXVelocities[corner4])) / d;
+                float picVelocity = (v1 * w1 * xVelocities[corner1] + v2 * w2 * xVelocities[corner2] + v3 * w3 * xVelocities[corner3] + v4 * w4 * xVelocities[corner4]) / d;
+                float weightedVelocityChanges = (v1 * w1 * (xVelocities[corner1] - prevXVelocities[corner1]) + v2 * w2 * (xVelocities[corner2] - prevXVelocities[corner2]) + v3 * w3 * (xVelocities[corner3] - prevXVelocities[corner3]) + v4 * w4 * (xVelocities[corner4] - prevXVelocities[corner4])) / d;
                 float flipVelocity = velocity + weightedVelocityChanges;
                 k2_x = PIC * picVelocity + (1 - PIC) * flipVelocity;
             }
@@ -63,13 +65,15 @@ void Fluid::advect() {
             corner3 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             corner4 = cellXCoordinate * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             // Proceed with transfer from the grid to particle
-
-            d = w1 + w2 + w3 + w4;
-
+            v1 = cellType[corner1] != EMPTY || cellType[corner1 - 1] != EMPTY ? 1.0 : 0.0;
+            v2 = cellType[corner2] != EMPTY || cellType[corner2 - 1] != EMPTY ? 1.0 : 0.0;
+            v3 = cellType[corner3] != EMPTY || cellType[corner3 - 1] != EMPTY ? 1.0 : 0.0;
+            v4 = cellType[corner4] != EMPTY || cellType[corner4 - 1] != EMPTY ? 1.0 : 0.0;
+            d = v1 * w1 + v2 * w2 + v3 * w3 + v4 * w4;
             velocity = particleYVelocities[i];
             if (d > 0.0)    {
-                float picVelocity = (valid1 * w1 * yVelocities[corner1] + valid2 * w2 * yVelocities[corner2] + valid3 * w3 * yVelocities[corner3] + valid4 * w4 * yVelocities[corner4]) / d;
-                float weightedVelocityChanges = (valid1 * w1 * (yVelocities[corner1] - prevYVelocities[corner1]) + valid2 * w2 * (yVelocities[corner2] - prevYVelocities[corner2]) + valid3 * w3 * (yVelocities[corner3] - prevYVelocities[corner3]) + valid4 * w4 * (yVelocities[corner4] - prevYVelocities[corner4])) / d;
+                float picVelocity = (v1 * w1 * yVelocities[corner1] + v2 * w2 * yVelocities[corner2] + v3 * w3 * yVelocities[corner3] + v4 * w4 * yVelocities[corner4]) / d;
+                float weightedVelocityChanges = (v1 * w1 * (yVelocities[corner1] - prevYVelocities[corner1]) + v2 * w2 * (yVelocities[corner2] - prevYVelocities[corner2]) + v3 * w3 * (yVelocities[corner3] - prevYVelocities[corner3]) + v4 * w4 * (yVelocities[corner4] - prevYVelocities[corner4])) / d;
                 float flipVelocity = velocity + weightedVelocityChanges;
                 k2_y = PIC * picVelocity + (1 - PIC) * flipVelocity;
             }
@@ -97,13 +101,15 @@ void Fluid::advect() {
             corner3 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             corner4 = cellXCoordinate * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             // Proceed with transfer from the grid to particle
-
+            v1 = cellType[corner1] != EMPTY || cellType[corner1 - gridHeight] != EMPTY ? 1.0 : 0.0;
+            v2 = cellType[corner2] != EMPTY || cellType[corner2 - gridHeight] != EMPTY ? 1.0 : 0.0;
+            v3 = cellType[corner3] != EMPTY || cellType[corner3 - gridHeight] != EMPTY ? 1.0 : 0.0;
+            v4 = cellType[corner4] != EMPTY || cellType[corner4 - gridHeight] != EMPTY ? 1.0 : 0.0;
             d = w1 + w2 + w3 + w4;
-
             velocity = particleXVelocities[i];
             if (d > 0.0)    {
-                float picVelocity = (valid1 * w1 * xVelocities[corner1] + valid2 * w2 * xVelocities[corner2] + valid3 * w3 * xVelocities[corner3] + valid4 * w4 * xVelocities[corner4]) / d;
-                float weightedVelocityChanges = (valid1 * w1 * (xVelocities[corner1] - prevXVelocities[corner1]) + valid2 * w2 * (xVelocities[corner2] - prevXVelocities[corner2]) + valid3 * w3 * (xVelocities[corner3] - prevXVelocities[corner3]) + valid4 * w4 * (xVelocities[corner4] - prevXVelocities[corner4])) / d;
+                float picVelocity = (v1 * w1 * xVelocities[corner1] + v2 * w2 * xVelocities[corner2] + v3 * w3 * xVelocities[corner3] + v4 * w4 * xVelocities[corner4]) / d;
+                float weightedVelocityChanges = (v1 * w1 * (xVelocities[corner1] - prevXVelocities[corner1]) + v2 * w2 * (xVelocities[corner2] - prevXVelocities[corner2]) + v3 * w3 * (xVelocities[corner3] - prevXVelocities[corner3]) + v4 * w4 * (xVelocities[corner4] - prevXVelocities[corner4])) / d;
                 float flipVelocity = velocity + weightedVelocityChanges;
                 k3_x = PIC * picVelocity + (1 - PIC) * flipVelocity;
             }
@@ -125,13 +131,15 @@ void Fluid::advect() {
             corner3 = fmin(cellXCoordinate + 1, gridLength - 2) * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             corner4 = cellXCoordinate * gridHeight + fmin(cellYCoordinate + 1, gridHeight - 2);
             // Proceed with transfer from the grid to particle
-
+            v1 = cellType[corner1] != EMPTY || cellType[corner1 - 1] != EMPTY ? 1.0 : 0.0;
+            v2 = cellType[corner2] != EMPTY || cellType[corner2 - 1] != EMPTY ? 1.0 : 0.0;
+            v3 = cellType[corner3] != EMPTY || cellType[corner3 - 1] != EMPTY ? 1.0 : 0.0;
+            v4 = cellType[corner4] != EMPTY || cellType[corner4 - 1] != EMPTY ? 1.0 : 0.0;
             d = w1 + w2 + w3 + w4;
-
             velocity = particleYVelocities[i];
             if (d > 0.0)    {
-                float picVelocity = (valid1 * w1 * yVelocities[corner1] + valid2 * w2 * yVelocities[corner2] + valid3 * w3 * yVelocities[corner3] + valid4 * w4 * yVelocities[corner4]) / d;
-                float weightedVelocityChanges = (valid1 * w1 * (yVelocities[corner1] - prevYVelocities[corner1]) + valid2 * w2 * (yVelocities[corner2] - prevYVelocities[corner2]) + valid3 * w3 * (yVelocities[corner3] - prevYVelocities[corner3]) + valid4 * w4 * (yVelocities[corner4] - prevYVelocities[corner4])) / d;
+                float picVelocity = (v1 * w1 * yVelocities[corner1] + v2 * w2 * yVelocities[corner2] + v3 * w3 * yVelocities[corner3] + v4 * w4 * yVelocities[corner4]) / d;
+                float weightedVelocityChanges = (v1 * w1 * (yVelocities[corner1] - prevYVelocities[corner1]) + v2 * w2 * (yVelocities[corner2] - prevYVelocities[corner2]) + v3 * w3 * (yVelocities[corner3] - prevYVelocities[corner3]) + v4 * w4 * (yVelocities[corner4] - prevYVelocities[corner4])) / d;
                 float flipVelocity = velocity + weightedVelocityChanges;
                 k3_y = PIC * picVelocity + (1 - PIC) * flipVelocity;
             }
@@ -154,7 +162,7 @@ void Fluid::advect() {
     }
 }
 
-void Fluid::extrapolateVelocities() {
+void fluid::extrapolateVelocities() {
     // extend the velocity field throughout the grid (not just where the particles are)
     // use an empty vector to store the 'wavefront' for BFS
     std::vector<std::tuple<int, int>> wX;
@@ -288,7 +296,7 @@ void Fluid::extrapolateVelocities() {
     }
 }
 
-void Fluid::detectBoundaryCollisions() {
+void fluid::detectBoundaryCollisions() {
     // First, set a minimum and maximum limit for particles to be located at
     float minX = spacing + particleRadius;
     float minY = spacing + particleRadius;
@@ -297,8 +305,8 @@ void Fluid::detectBoundaryCollisions() {
     // Iterate over all particles, see whether they are colliding with any boundaries
     for (int i = 0; i < numParticles; i++)  {
         // Clamp the X and Y coordinates of the particle between boundary coordinates
-        if (particleXPositions[i] < minX || particleXPositions[i] > maxX) particleXVelocities[i] = containerWallXVelocity;
-        if (particleYPositions[i] < minY || particleYPositions[i] > maxY) particleYVelocities[i] = containerWallYVelocity;
+        //if (particleXPositions[i] < minX || particleXPositions[i] > maxX) particleXVelocities[i] = containerWallXVelocity;
+        //if (particleYPositions[i] < minY || particleYPositions[i] > maxY) particleYVelocities[i] = containerWallYVelocity;
         particleXPositions[i] = clamp(particleXPositions[i], minX, maxX);
         particleYPositions[i] = clamp(particleYPositions[i], minY, maxY);
     }

@@ -14,10 +14,10 @@
 #ifndef FLUIDSIM_FLUID_H
 #define FLUIDSIM_FLUID_H
 // Defining grid dimensions
-#define LENGTH 1000
-#define HEIGHT 1000
+#define LENGTH 800
+#define HEIGHT 800
 // Defining the number of fluid particles along each dimension
-#define XDIM 60
+#define XDIM 100
 #define YDIM 100
 // Defining the grid cell spacing
 #define SPACING 10.0
@@ -36,13 +36,13 @@
 #define PUSH_PENALTY 0.1
 #define BETTER_INTEGRATION true
 #define TIMESTEP 1.0/60.0
-#define SUBSTEPS 2
+#define SUBSTEPS 0.5
 #define PENALTY false
-#define PIC 0.1
+#define PIC 0.05
 
-class Fluid {
+class fluid {
 public:
-    // Fluid should contain a grid of specified dimensions
+    // fluid should contain a grid of specified dimensions
     float spacing = SPACING; // This is the length of one cell in the grid
     int gridLength = floor(LENGTH / spacing) + 1; // The number of grid cells along the X direction
     int gridHeight = floor(HEIGHT / spacing) + 1; // The number of grid cells along the Y direction
@@ -88,11 +88,11 @@ public:
     float containerWallYVelocity;
 
     // Finally, we come to functions
-    Fluid();
+    fluid();
     void simulateFluid();
     int IX(int x, int y);
     // Advection
-    void advect();
+    void advect(float dt);
     void extrapolateVelocities();
     void detectBoundaryCollisions();
     // Transfer

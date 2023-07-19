@@ -1,12 +1,12 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
-#include "Fluid.h"
+#include "fluid.h"
 
 int main() {
     std::cout << "2D PIC/FLIP Simulation.\n" << std::endl;
-    Fluid fluid;
+    fluid fluid;
     // define viewing window
-    sf::RenderWindow window(sf::VideoMode(LENGTH, HEIGHT), "2D PIC/FLIP Simulator");
+    sf::RenderWindow window(sf::VideoMode(LENGTH * 2, HEIGHT * 2), "2D PIC/FLIP Simulator");
     // define circles that act as particles
     std::vector<sf::CircleShape> circles(fluid.numParticles);
     // set the initial radius and color of the particles

@@ -2,9 +2,9 @@
 // Created by Anchit Mishra on 2023-03-16.
 //
 
-#include "Fluid.h"
+#include "fluid.h"
 
-Fluid::Fluid() {
+fluid::fluid() {
     // Part 1: Initialize grid stuff
     // Initialize the grid velocities
     xVelocities.resize(numCells, 0.0);
@@ -37,7 +37,7 @@ Fluid::Fluid() {
     int index = 0;
     for (int i = 0; i < particleMassLength; i++)    {
         for (int j = 0; j < particleMassHeight; j++)    {
-            particleXPositions[index] = 29 * spacing + 2 * particleRadius * i; //+ (j % 2 == 0 ? particleRadius : 0);
+            particleXPositions[index] = 25 * spacing + 2 * particleRadius * i; //+ (j % 2 == 0 ? particleRadius : 0);
             particleYPositions[index++] = 3 * spacing + 2 * particleRadius * j;
         }
     }
@@ -47,17 +47,17 @@ Fluid::Fluid() {
 
 }
 
-int Fluid::IX(int x, int y) {
+int fluid::IX(int x, int y) {
     return x * gridHeight + y;
 }
 
-float Fluid::clamp(float val, float min, float max) {
+float fluid::clamp(float val, float min, float max) {
     if (val < min) return min;
     if (val > max) return max;
     return val;
 }
 
-void Fluid::simulateFluid() {
+void fluid::simulateFluid() {
     // Implement simulation cycle here - transfer to grid, solve incompressibility, transfer from grid.
     detectBoundaryCollisions();
     transferVelocitiesToGrid();
@@ -66,6 +66,6 @@ void Fluid::simulateFluid() {
     projectGS();
     extrapolateVelocities();
     transferVelocitiesFromGrid();
-    advect();
+    advect(TIMESTEP/SUBSTEPS * 0.2);
 
 }
