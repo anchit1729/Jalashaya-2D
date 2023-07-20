@@ -9,13 +9,13 @@ int grid::IX(int x, int y) const   {
 }
 
 std::vector<float> grid::compute_bilerp_weights(const std::vector<float> &offsets) const {
-    // note: order assumes starting at bottom left of a cell, working counterclockwise
+    // note: order assumes starting at top left of a cell, working clockwise
     // note: y-axis increases in the downward direction
     std::vector<float> w = {0, 0, 0, 0};
-    w[0] = (1 - (offsets[0] * inv_spacing)) * (offsets[1] * inv_spacing);
-    w[1] = (offsets[0] * inv_spacing) * (offsets[1] * inv_spacing);
-    w[2] = (offsets[0] * inv_spacing) * (1 - (offsets[1] * inv_spacing));
-    w[3] = (1 - (offsets[0] * inv_spacing)) * (1 - (offsets[1] * inv_spacing));
+    w[0] = (1 - (offsets[0] * inv_spacing)) * (1 - (offsets[1] * inv_spacing));
+    w[1] = (offsets[0] * inv_spacing) * (1 - (offsets[1] * inv_spacing));
+    w[2] = (offsets[0] * inv_spacing) * (offsets[1] * inv_spacing);
+    w[3] = (1 - (offsets[0] * inv_spacing)) * (offsets[1] * inv_spacing);
     return w;
 }
 
@@ -23,10 +23,11 @@ std::vector<float> grid::compute_distance_offsets(const std::vector<float> &x, c
     float x0 = x[0], y0 = x[1];
     float x_shift = offset_y ? 0.0f : static_cast<float>(0.5 * spacing);
     float y_shift = offset_y ? static_cast<float>(0.5 * spacing) : 0.0f;
-    x0 -= x_shift; y0 -= y_shift;
-    float cell_x = floorf(x0 * inv_spacing);
-    float cell_y = floorf(y0 * inv_spacing);
-    float dx = x0 - cell_x * spacing, dy = y0 - cell_y * spacing;
+    x0 -= x_shift; std::clamp(x0, spacing, static_cast<float>((dim_x - 2)) * spacing); // bound within domain
+    y0 -= y_shift; std::clamp(y0, spacing, static_cast<float>((dim_y - 2)) * spacing); // bound within domain
+    int cell_x = floor(x0 * inv_spacing); std::clamp<int>(cell_x, 1, dim_x - 2); // bound within domain
+    int cell_y = floor(y0 * inv_spacing); std::clamp<int>(cell_y, 1, dim_y - 2); // bound within domain
+    float dx = x0 - static_cast<float>(cell_x) * spacing, dy = y0 - static_cast<float>(cell_y) * spacing;
     std::vector<float> offsets = {dx, dy};
     return offsets;
 }
@@ -52,10 +53,10 @@ float grid::bilerp(const std::vector<float> &pos, const std::vector<float> &f, c
     float val = 0;
     int x = static_cast<int>(floorf(pos[0] * inv_spacing));
     int y = static_cast<int>(floorf(pos[1] * inv_spacing));
-    int c1 = IX(x, y + 1);
-    int c2 = IX(x + 1, y + 1);
-    int c3 = IX(x + 1, y);
-    int c4 = IX(x, y);
+    int c1 = IX(x, y);
+    int c2 = IX(x + 1, y);
+    int c3 = IX(x + 1, y + 1);
+    int c4 = IX(x, y + 1);
     std::vector<int> c = {c1, c2, c3, c4};
     for (int i = 0; i < 4; i++) {
         val += f[c[i]] * w[i];
